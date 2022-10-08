@@ -17,13 +17,6 @@
    <layout class="QGridLayout" name="gridLayout_5">
     <item row="0" column="0" colspan="2">
      <layout class="QGridLayout" name="gridLayout_4">
-      <item row="0" column="0">
-       <widget class="QPushButton" name="pushButton_23">
-        <property name="text">
-         <string>Browse</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="1">
        <spacer name="horizontalSpacer">
         <property name="orientation">
@@ -36,6 +29,13 @@
          </size>
         </property>
        </spacer>
+      </item>
+      <item row="0" column="0">
+       <widget class="QPushButton" name="pushButton">
+        <property name="text">
+         <string>Browse</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
@@ -128,7 +128,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Number of Rows</string>
+         <string>Width</string>
         </property>
        </widget>
       </item>
@@ -149,7 +149,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Number of Columns</string>
+         <string>Height</string>
         </property>
        </widget>
       </item>
@@ -244,22 +244,6 @@
         </property>
        </widget>
       </item>
-      <item row="10" column="1">
-       <spacer name="horizontalSpacer_3">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Fixed</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>200</width>
-          <height>1</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
       <item row="0" column="0" colspan="3">
        <widget class="QLabel" name="headerDataLabel">
         <property name="font">
@@ -293,6 +277,22 @@
         </property>
        </spacer>
       </item>
+      <item row="10" column="2">
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>200</width>
+          <height>1</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
      </layout>
     </item>
    </layout>
@@ -306,8 +306,20 @@
      <height>26</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionOpen"/>
+   </widget>
+   <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
