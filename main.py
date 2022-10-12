@@ -17,7 +17,7 @@ class Ui(QtWidgets.QMainWindow):
         self.show()
 
         #?######### Initializations ##########
-
+    
         #* Bit depth dictionary 
         self.imageColorDictionary = {'1':1, 'L':8, 'P':8, 'RGB':24, 'RGBA':32, 'CMYK':32, 'YCbCr':24, 'I':32, 'F':32}
 
@@ -39,11 +39,12 @@ class Ui(QtWidgets.QMainWindow):
         print('0')
 
         #* Get image path
-        fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images', "Image files (*.jpg *.jpeg *.bmp *.dcm *.png)")
+        fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images')
         imagePath = fileName[0]
+
         #* Check image format then call its function
         magic.from_file(imagePath)
-        if magic.from_file(imagePath) == 'DICOM medical imaging data':
+        if (magic.from_file(imagePath) == 'DICOM medical imaging data') or  (magic.from_file(imagePath) == 'TIFF image data, little-endian'):
             self.dicomFormat(imagePath)
         else: self.jpgAndBmpFormat(imagePath)
     
