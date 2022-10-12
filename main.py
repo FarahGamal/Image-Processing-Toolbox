@@ -2,18 +2,20 @@
 
 from tkinter import Canvas
 from PIL import Image
-import sys, os, pathlib, magic
+import sys, os, pathlib
 import pydicom as dicom
 import matplotlib.pyplot as plt
 from PyQt5 import  QtWidgets,uic
+from PyQt5.QtWidgets import QMessageBox
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-
+#?-----------------------------------------------------------------------------------------------------------------------------#
 
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui, self).__init__()
         uic.loadUi('GUI.ui', self)
+        self.setWindowTitle("Image Viewer")
         self.show()
 
         #?######### Initializations ##########
@@ -28,74 +30,87 @@ class Ui(QtWidgets.QMainWindow):
 
         #!?######### Links of GUI Elements to Methods ##########
 
-        self.pushButton.clicked.connect(self.openImage)
+        self.browseButton.clicked.connect(self.openImage)
 
+#?-----------------------------------------------------------------------------------------------------------------------------#
 
-
-#?### Main Methods ####
+                                                #?######## Main Methods #########
 
     #! Browse and get image path then call a specific function according to image format
     def openImage(self):
-        print('0')
 
         #* Get image path
-        fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images')
+        fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images', "Image files (*.jpg *.jpeg *.bmp *.dcm)")
         imagePath = fileName[0]
 
         #* Check image format then call its function
-        magic.from_file(imagePath)
-        if (magic.from_file(imagePath) == 'DICOM medical imaging data') or  (magic.from_file(imagePath) == 'TIFF image data, little-endian'):
+        if (pathlib.Path(imagePath).suffix == ".jpg") or (pathlib.Path(imagePath).suffix == ".bmp"):
+            self.jpgAndBmpFormat(imagePath)
+        elif pathlib.Path(imagePath).suffix == ".dcm":
             self.dicomFormat(imagePath)
-        else: self.jpgAndBmpFormat(imagePath)
     
     #! View jpg and bmp image format and show its attributes
     def jpgAndBmpFormat(self, imagePath):
 
-        #* Open image then view it 
-        image = Image.open(imagePath)
-        plt.imshow(image)
-        self.Canvas.draw()
+        # This try and except to handel corrupted image 
+        try:
 
-        #* Hide DICM attribute
-        self.hideDicomAttribute()
+            #* Open image then view it in the GUI
+            image = Image.open(imagePath)
+            plt.imshow(image)
+            self.Canvas.draw()
 
-        #* Show attributes of the image
-        self.nuberOfRowsResultLable.setText(f'{image.width}')
-        self.numberOfColumnsResultLable.setText(f'{image.height}')
-        self.imageColorResultLable.setText(f'{image.mode}')
-        self.totalSizeResultLable.setText(f'{8*(os.path.getsize(imagePath))}')
-        self.bitDepthResultLable.setText(f'{self.imageColorDictionary[image.mode]}')
+            #* Hide DICM attributes
+            self.hideDicomAttribute()
+
+            #* Show attributes of the image
+            self.nuberOfRowsResultLable.setText(f'{image.width}')
+            self.numberOfColumnsResultLable.setText(f'{image.height}')
+            self.imageColorResultLable.setText(f'{image.mode}')
+            self.totalSizeResultLable.setText(f'{8*(os.path.getsize(imagePath))}')
+            self.bitDepthResultLable.setText(f'{self.imageColorDictionary[image.mode]}')
+        except:
+            # Call helper function to show an error message
+            self.ShowPopUpMessage("Can not open this file.")
 
     #! View DICOM image format and show its attributes 
     def dicomFormat(self, imagePath):
-        print('dicom')
 
-        #* Open image then view it 
-        image = dicom.dcmread(imagePath)
-        plt.imshow(image.pixel_array,cmap=plt.cm.gray)
-        self.Canvas.draw()
+        # This try and except to handel corrupted image 
+        try:
+            #* Open image then view it 
+            image = dicom.dcmread(imagePath)
+            plt.imshow(image.pixel_array,cmap=plt.cm.gray)
+            self.Canvas.draw()
 
-        #* Show DICM attribute
-        self.showDicomAttribute()
+            #* Show DICM attributes
+            self.showDicomAttribute()
 
-        #* Show attributes of the image
-        if hasattr(image, 'Modality'): self.modalityResultLable.setText(f'{image.Modality}')
-        else : self.modalityResultLable.setText('------')
-        if hasattr(image, 'StudyDescription'): self.bodyPartExaminedResultLable.setText(f'{image.StudyDescription}')
-        else : self.bodyPartExaminedResultLable.setText('------')
-        if hasattr(image, 'PatientAge'): self.patientAgeResultLable.setText(f'{image.PatientAge}')
-        else : self.patientAgeResultLable.setText('------')
-        if hasattr(image, 'Rows'): self.nuberOfRowsResultLable.setText(f'{image.Rows}')
-        else : self.nuberOfRowsResultLable.setText('------')
-        if hasattr(image, 'Columns'): self.numberOfColumnsResultLable.setText(f'{image.Columns}')
-        else : self.numberOfColumnsResultLable.setText('------')
-        if hasattr(image, 'BitsAllocated'): self.bitDepthResultLable.setText(f'{image.BitsAllocated}')
-        else : self.bitDepthResultLable.setText('------')
-        if hasattr(image, 'PhotometricInterpretation'): self.imageColorResultLable.setText(f'{image.PhotometricInterpretation}')
-        else : self.imageColorResultLable.setText('------')
-        if hasattr(image, 'PatientName'): self.patientNameResultLable.setText(f'{image.PatientName}')
-        else : self.patientNameResultLable.setText('------')
-        self.totalSizeResultLable.setText(f'{os.path.getsize(imagePath)}')  
+            #* Show attributes of the image
+            if hasattr(image, 'Modality'): self.modalityResultLable.setText(f'{image.Modality}')
+            else : self.modalityResultLable.setText('------')
+            if hasattr(image, 'StudyDescription'): self.bodyPartExaminedResultLable.setText(f'{image.StudyDescription}')
+            else : self.bodyPartExaminedResultLable.setText('------')
+            if hasattr(image, 'PatientAge'): self.patientAgeResultLable.setText(f'{image.PatientAge}')
+            else : self.patientAgeResultLable.setText('------')
+            if hasattr(image, 'Rows'): self.nuberOfRowsResultLable.setText(f'{image.Rows}')
+            else : self.nuberOfRowsResultLable.setText('------')
+            if hasattr(image, 'Columns'): self.numberOfColumnsResultLable.setText(f'{image.Columns}')
+            else : self.numberOfColumnsResultLable.setText('------')
+            if hasattr(image, 'BitsAllocated'): self.bitDepthResultLable.setText(f'{image.BitsAllocated}')
+            else : self.bitDepthResultLable.setText('------')
+            if hasattr(image, 'PhotometricInterpretation'): self.imageColorResultLable.setText(f'{image.PhotometricInterpretation}')
+            else : self.imageColorResultLable.setText('------')
+            if hasattr(image, 'PatientName'): self.patientNameResultLable.setText(f'{image.PatientName}')
+            else : self.patientNameResultLable.setText('------')
+            self.totalSizeResultLable.setText(f'{os.path.getsize(imagePath)}')  
+        except:
+            # Call helper function to show an error message
+            self.ShowPopUpMessage("Can not open this file.")
+
+#?-----------------------------------------------------------------------------------------------------------------------------#
+
+                                                #?######## Helper Functions #########
 
     #! Hide all the attributes of the DICM image
     def hideDicomAttribute(self):
@@ -119,7 +134,14 @@ class Ui(QtWidgets.QMainWindow):
         self.bodyPartExaminedTitleLable.show()
         self.patientAgeTitleLable.show()
 
+    #! Show an Error Message for Handling Invalid files
+    def ShowPopUpMessage(self, popUpMessage):
+        messageBoxElement = QMessageBox()
+        messageBoxElement.setWindowTitle("ERROR")
+        messageBoxElement.setText(popUpMessage)
+        execute = messageBoxElement.exec_()
 
+#?-----------------------------------------------------------------------------------------------------------------------------#
 
 app = QtWidgets.QApplication(sys.argv)
 window = Ui()

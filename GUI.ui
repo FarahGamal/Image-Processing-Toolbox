@@ -31,7 +31,7 @@
        </spacer>
       </item>
       <item row="0" column="0">
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="browseButton">
         <property name="text">
          <string>Browse</string>
         </property>
@@ -116,36 +116,22 @@
     </item>
     <item row="1" column="1">
      <layout class="QGridLayout" name="gridLayout_3">
-      <item row="5" column="2">
-       <widget class="QLabel" name="imageColorResultLable">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="2">
-       <widget class="QLabel" name="modalityResultLable">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="9" column="2">
-       <widget class="QLabel" name="bodyPartExaminedResultLable">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="2">
+      <item row="8" column="1">
        <widget class="QLabel" name="patientAgeResultLable">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="7" column="2">
+      <item row="7" column="1">
        <widget class="QLabel" name="patientNameResultLable">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="1">
+       <widget class="QLabel" name="bodyPartExaminedResultLable">
         <property name="text">
          <string/>
         </property>
@@ -155,7 +141,7 @@
        <widget class="QLabel" name="bodyPartExaminedTitleLable">
         <property name="font">
          <font>
-          <pointsize>10</pointsize>
+          <pointsize>9</pointsize>
           <weight>75</weight>
           <bold>true</bold>
          </font>
@@ -165,14 +151,35 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="2">
+      <item row="1" column="1">
+       <widget class="QLabel" name="nuberOfRowsResultLable">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
        <widget class="QLabel" name="numberOfColumnsResultLable">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="4" column="2">
+      <item row="2" column="0">
+       <widget class="QLabel" name="numberOfColumnsTitleLable">
+        <property name="font">
+         <font>
+          <pointsize>9</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Height</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
        <widget class="QLabel" name="bitDepthResultLable">
         <property name="text">
          <string/>
@@ -183,7 +190,7 @@
        <widget class="QLabel" name="nuberOfRowsTitleLable">
         <property name="font">
          <font>
-          <pointsize>10</pointsize>
+          <pointsize>9</pointsize>
           <weight>75</weight>
           <bold>true</bold>
          </font>
@@ -193,39 +200,11 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="nuberOfRowsResultLable">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="numberOfColumnsTitleLable">
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Height</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="2">
-       <widget class="QLabel" name="totalSizeResultLable">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
       <item row="3" column="0">
        <widget class="QLabel" name="totalSizeTitleLable">
         <property name="font">
          <font>
-          <pointsize>10</pointsize>
+          <pointsize>9</pointsize>
           <weight>75</weight>
           <bold>true</bold>
          </font>
@@ -235,90 +214,24 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="bitDepthTitleLable">
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
+      <item row="3" column="1">
+       <widget class="QLabel" name="totalSizeResultLable">
         <property name="text">
-         <string>Bit Depth</string>
+         <string/>
         </property>
        </widget>
       </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="modalityTitleLable">
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
+      <item row="5" column="1">
+       <widget class="QLabel" name="imageColorResultLable">
         <property name="text">
-         <string>Modality</string>
+         <string/>
         </property>
        </widget>
       </item>
-      <item row="7" column="0">
-       <widget class="QLabel" name="patientNameTitleLable">
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
+      <item row="6" column="1">
+       <widget class="QLabel" name="modalityResultLable">
         <property name="text">
-         <string>Patient Name</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="imageColorTitleLable">
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Image Color</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0">
-       <widget class="QLabel" name="patientAgeTitleLable">
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Patient Age</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0" colspan="3">
-       <widget class="QLabel" name="headerDataLabel">
-        <property name="font">
-         <font>
-          <pointsize>14</pointsize>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Header Data</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
+         <string/>
         </property>
        </widget>
       </item>
@@ -338,7 +251,52 @@
         </property>
        </spacer>
       </item>
-      <item row="10" column="2">
+      <item row="8" column="0">
+       <widget class="QLabel" name="patientAgeTitleLable">
+        <property name="font">
+         <font>
+          <pointsize>9</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Patient Age</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="imageColorTitleLable">
+        <property name="font">
+         <font>
+          <pointsize>9</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Image Color</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="2">
+       <widget class="QLabel" name="headerDataLabel">
+        <property name="font">
+         <font>
+          <pointsize>14</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Header Data</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="1">
        <spacer name="horizontalSpacer_3">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -354,6 +312,48 @@
         </property>
        </spacer>
       </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="patientNameTitleLable">
+        <property name="font">
+         <font>
+          <pointsize>9</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Patient Name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="bitDepthTitleLable">
+        <property name="font">
+         <font>
+          <pointsize>9</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Bit Depth</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="modalityTitleLable">
+        <property name="font">
+         <font>
+          <pointsize>9</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Modality</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
@@ -367,13 +367,6 @@
      <height>26</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
-     <string>File</string>
-    </property>
-    <addaction name="actionOpen"/>
-   </widget>
-   <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">
