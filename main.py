@@ -4,9 +4,13 @@ from tkinter import Canvas
 from PIL import Image
 import sys, os, pathlib
 import pydicom as dicom
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 import matplotlib.pyplot as plt
 from PyQt5 import  QtWidgets,uic
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import *
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plot
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
@@ -23,11 +27,16 @@ class Ui(QtWidgets.QMainWindow):
         #* Bit depth dictionary 
         self.imageColorDictionary = {'1':1, 'L':8, 'P':8, 'RGB':24, 'RGBA':32, 'CMYK':32, 'YCbCr':24, 'I':32, 'F':32}
 
+        self.test()
         #* Canvas definition 
-        self.figure = plt.figure(figsize=(15,5))
-        self.Canvas = FigureCanvas(self.figure)
-        self.gridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+        # self.figure = plt.figure(figsize=(15,5))
+        # self.Canvas = FigureCanvas(self.figure)
+        # self.gridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+        # self.originaImageGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+        # self.nearestNeighborGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+        # self.linearGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
 
+        self.lineEdit.setValidator(QIntValidator())
         #!?######### Links of GUI Elements to Methods ##########
 
         self.browseButton.clicked.connect(self.openImage)
@@ -54,18 +63,25 @@ class Ui(QtWidgets.QMainWindow):
 
         # This try and except to handel corrupted image 
         try:
-
+            self.figure = plt.figure(figsize=(15,5))
+            self.Canvas = FigureCanvas(self.figure)
+            self.gridLayout.addWidget(self.Canvas,0, 0, 1, 1)
             #* Open image then view it in the GUI
             image = Image.open(imagePath)
-            plt.imshow(image)
+            plt.imshow(image, cmap=plt.cm.gray)
             self.Canvas.draw()
-
+            # pixmap = QPixmap(imagePath)
+            # item = QtWidgets.QGraphicsPixmapItem(pixmap)
+            # scene = QtWidgets.QGraphicsScene(self)
+            # scene.addItem(item)
+            # self.graphicsView.setScene(scene)
+            
             #* Hide DICM attributes
             self.hideDicomAttribute()
 
             #* Show attributes of the image
-            self.nuberOfRowsResultLable.setText(f'{image.width}')
-            self.numberOfColumnsResultLable.setText(f'{image.height}')
+            self.heightLable.setText(f'{image.height}')
+            self.widthLable.setText(f'{image.width}')
             self.imageColorResultLable.setText(f'{image.mode}')
             self.totalSizeResultLable.setText(f'{8*(os.path.getsize(imagePath))}')
             self.bitDepthResultLable.setText(f'{self.imageColorDictionary[image.mode]}')
@@ -78,11 +94,27 @@ class Ui(QtWidgets.QMainWindow):
 
         # This try and except to handel corrupted image 
         try:
+            self.figure = plt.figure(figsize=(15,5))
+            self.Canvas = FigureCanvas(self.figure)
+            self.gridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+            
             #* Open image then view it 
             image = dicom.dcmread(imagePath)
             plt.imshow(image.pixel_array,cmap=plt.cm.gray)
             self.Canvas.draw()
 
+            # scene = QtWidgets.QGraphicsScene(self)
+            # self.scene = scene
+            # figure = Figure()
+            # axes = figure.gca()
+            # axes.get_xaxis().set_visible(False)
+            # axes.get_yaxis().set_visible(False)
+            # axes.imshow(image.pixel_array, cmap=plot.cm.bone)
+            # canvas = FigureCanvas(figure)
+            # canvas.setGeometry(0, 0, 500, 500)
+            # scene.addWidget(canvas)
+            # self.graphicsView.setScene(scene)
+            
             #* Show DICM attributes
             self.showDicomAttribute()
 
@@ -93,10 +125,10 @@ class Ui(QtWidgets.QMainWindow):
             else : self.bodyPartExaminedResultLable.setText('------')
             if hasattr(image, 'PatientAge'): self.patientAgeResultLable.setText(f'{image.PatientAge}')
             else : self.patientAgeResultLable.setText('------')
-            if hasattr(image, 'Rows'): self.nuberOfRowsResultLable.setText(f'{image.Rows}')
-            else : self.nuberOfRowsResultLable.setText('------')
-            if hasattr(image, 'Columns'): self.numberOfColumnsResultLable.setText(f'{image.Columns}')
-            else : self.numberOfColumnsResultLable.setText('------')
+            if hasattr(image, 'Rows'): self.widthLable.setText(f'{image.Rows}')
+            else : self.widthLable.setText('------')
+            if hasattr(image, 'Columns'): self.heightLable.setText(f'{image.Columns}')
+            else : self.heightLable.setText('------')
             if hasattr(image, 'BitsAllocated'): self.bitDepthResultLable.setText(f'{image.BitsAllocated}')
             else : self.bitDepthResultLable.setText('------')
             if hasattr(image, 'PhotometricInterpretation'): self.imageColorResultLable.setText(f'{image.PhotometricInterpretation}')
@@ -108,6 +140,18 @@ class Ui(QtWidgets.QMainWindow):
             # Call helper function to show an error message
             self.ShowPopUpMessage("Can not open this file.")
 
+    def test(self):
+        self.figure = plt.figure(figsize=(15,5))
+        self.Canvas = FigureCanvas(self.figure)
+        self.originaImageGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+
+        self.figure = plt.figure(figsize=(15,5))
+        self.Canvas = FigureCanvas(self.figure)
+        self.nearestNeighborGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+
+        self.figure = plt.figure(figsize=(15,5))
+        self.Canvas = FigureCanvas(self.figure)
+        self.linearGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
                                                 #?######## Helper Functions #########
