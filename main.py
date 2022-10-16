@@ -1,8 +1,9 @@
 ########## Imports ##########
 
 from tkinter import Canvas
+import numpy as np
 from PIL import Image
-import sys, os, pathlib
+import sys, os, pathlib, cv2
 import pydicom as dicom
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -66,25 +67,40 @@ class Ui(QtWidgets.QMainWindow):
             self.figure = plt.figure(figsize=(15,5))
             self.Canvas = FigureCanvas(self.figure)
             self.gridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+
             #* Open image then view it in the GUI
-            image = Image.open(imagePath)
+            image = Image.open(imagePath).convert('L')
+
+            #* Converting RGB image to grey scale
+            imageShape = np.array(image)
+            if imageShape.ndim == 2:
+                channels = 1
+                print("image has 1 channel")
+            else:
+                channels = imageShape.shape[-1]
+                print("image has", channels, "channels")
+
+            #* View image on GUI
             plt.imshow(image, cmap=plt.cm.gray)
             self.Canvas.draw()
-            # pixmap = QPixmap(imagePath)
-            # item = QtWidgets.QGraphicsPixmapItem(pixmap)
-            # scene = QtWidgets.QGraphicsScene(self)
-            # scene.addItem(item)
-            # self.graphicsView.setScene(scene)
             
             #* Hide DICM attributes
             self.hideDicomAttribute()
+
+            #* Calculate bit depth
+            print(int(np.amax(imageShape)))
+            print(int(np.amin(imageShape)))
+            bitDepth =  (np.ceil(np.log2((int(np.amax(imageShape)))-(int(np.amin(imageShape)))+1))) * channels
+
+            #* Calculate total size
+            totalSize = image.height * image.width * bitDepth
 
             #* Show attributes of the image
             self.heightLable.setText(f'{image.height}')
             self.widthLable.setText(f'{image.width}')
             self.imageColorResultLable.setText(f'{image.mode}')
-            self.totalSizeResultLable.setText(f'{8*(os.path.getsize(imagePath))}')
-            self.bitDepthResultLable.setText(f'{self.imageColorDictionary[image.mode]}')
+            self.totalSizeResultLable.setText(f'{totalSize}')
+            self.bitDepthResultLable.setText(f'{bitDepth}')
         except:
             # Call helper function to show an error message
             self.ShowPopUpMessage("Can not open this file.")
@@ -152,6 +168,7 @@ class Ui(QtWidgets.QMainWindow):
         self.figure = plt.figure(figsize=(15,5))
         self.Canvas = FigureCanvas(self.figure)
         self.linearGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
                                                 #?######## Helper Functions #########
