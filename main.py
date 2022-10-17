@@ -1,5 +1,6 @@
 ########## Imports ##########
 
+from operator import ne
 from tkinter import Canvas
 import numpy as np
 from PIL import Image
@@ -41,6 +42,8 @@ class Ui(QtWidgets.QMainWindow):
         #!?######### Links of GUI Elements to Methods ##########
 
         self.browseButton.clicked.connect(self.openImage)
+        self.browsePushButton.clicked.connect(self.openImageZoomTab)
+        self.zoomPushButton.clicked.connect(self.zoom)
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
@@ -156,10 +159,9 @@ class Ui(QtWidgets.QMainWindow):
             # Call helper function to show an error message
             self.ShowPopUpMessage("Can not open this file.")
 
+############################################################################################
+
     def test(self):
-        self.figure = plt.figure(figsize=(15,5))
-        self.Canvas = FigureCanvas(self.figure)
-        self.originaImageGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
 
         self.figure = plt.figure(figsize=(15,5))
         self.Canvas = FigureCanvas(self.figure)
@@ -169,6 +171,64 @@ class Ui(QtWidgets.QMainWindow):
         self.Canvas = FigureCanvas(self.figure)
         self.linearGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
 
+    def openImageZoomTab(self):
+        #* Get image path
+        fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images', "Image files (*.jpg *.jpeg *.bmp *.dcm)")
+        imagePath = fileName[0]
+
+        #* Check image format then call its function
+        self.figure = plt.figure(figsize=(15,5))
+        self.Canvas = FigureCanvas(self.figure)
+        self.originaImageGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+
+        #* Open image then view it in the GUI
+        self.image = Image.open(imagePath).convert('L')
+        plt.imshow(self.image, cmap=plt.cm.gray)
+        self.Canvas.draw()
+
+        
+    def zoom(self):
+
+        imageArray = np.asarray(self.image)
+        # data = Image.fromarray(imageArray)
+        # data.save('dummy_pic.png')
+        print(imageArray)
+        print(imageArray.shape)
+
+        factor = int(self.lineEdit.text())
+        colSize = factor * self.image.width
+        rowSize = factor * self.image.height
+
+        newImageArray = np.empty([rowSize, colSize])
+        for i in range(rowSize):
+            for j in range(colSize):
+                newrow = i/factor
+                newcol = j/factor
+                newrowImg = self.interpolationRound(newrow)
+                newcolImg = self.interpolationRound(newcol)
+                newImageArray[i, j] = imageArray[newrowImg, newcolImg]
+                # print(col,end=" ")
+
+        print(newImageArray.shape)
+        print(newImageArray)
+        data = Image.fromarray(newImageArray)
+        if data.mode != 'RGB':
+            data = data.convert('RGB')
+        data.save('dummy_pic.png')
+
+        self.figure = plt.figure(figsize=(15,5))
+        self.Canvas = FigureCanvas(self.figure)
+        self.nearestNeighborGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+        plt.imshow(data, cmap=plt.cm.gray)
+        self.Canvas.draw()
+
+
+    def interpolationRound(self, val):
+        if round(val,1) == 0.5:
+            val = int(val)
+        else:
+            val = round(val)
+        return val
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
                                                 #?######## Helper Functions #########
