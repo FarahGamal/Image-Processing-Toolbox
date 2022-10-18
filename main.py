@@ -25,20 +25,9 @@ class Ui(QtWidgets.QMainWindow):
         self.show()
 
         #?######### Initializations ##########
-    
-        #* Bit depth dictionary 
-        self.imageColorDictionary = {'1':1, 'L':8, 'P':8, 'RGB':24, 'RGBA':32, 'CMYK':32, 'YCbCr':24, 'I':32, 'F':32}
 
-        self.test()
-        #* Canvas definition 
-        # self.figure = plt.figure(figsize=(15,5))
-        # self.Canvas = FigureCanvas(self.figure)
-        # self.gridLayout.addWidget(self.Canvas,0, 0, 1, 1)
-        # self.originaImageGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
-        # self.nearestNeighborGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
-        # self.linearGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+        self.canvas()
 
-        self.lineEdit.setValidator(QIntValidator())
         #!?######### Links of GUI Elements to Methods ##########
 
         self.browseButton.clicked.connect(self.openImage)
@@ -65,7 +54,7 @@ class Ui(QtWidgets.QMainWindow):
     #! View jpg and bmp image format and show its attributes
     def jpgAndBmpFormat(self, imagePath):
 
-        # This try and except to handel corrupted image 
+# This try and except to handel corrupted image 
         try:
             self.figure = plt.figure(figsize=(15,5))
             self.Canvas = FigureCanvas(self.figure)
@@ -106,7 +95,7 @@ class Ui(QtWidgets.QMainWindow):
             self.bitDepthResultLable.setText(f'{bitDepth}')
         except:
             # Call helper function to show an error message
-            self.ShowPopUpMessage("Can not open this file.")
+            self.ShowPopUpMessage("Corrupted Image! Please choose a valid one")
 
     #! View DICOM image format and show its attributes 
     def dicomFormat(self, imagePath):
@@ -121,21 +110,12 @@ class Ui(QtWidgets.QMainWindow):
             image = dicom.dcmread(imagePath)
             plt.imshow(image.pixel_array,cmap=plt.cm.gray)
             self.Canvas.draw()
-
-            # scene = QtWidgets.QGraphicsScene(self)
-            # self.scene = scene
-            # figure = Figure()
-            # axes = figure.gca()
-            # axes.get_xaxis().set_visible(False)
-            # axes.get_yaxis().set_visible(False)
-            # axes.imshow(image.pixel_array, cmap=plot.cm.bone)
-            # canvas = FigureCanvas(figure)
-            # canvas.setGeometry(0, 0, 500, 500)
-            # scene.addWidget(canvas)
-            # self.graphicsView.setScene(scene)
             
             #* Show DICM attributes
             self.showDicomAttribute()
+
+            #* Image total size
+            size = image.Rows * image.Columns * image.BitsAllocated
 
             #* Show attributes of the image
             if hasattr(image, 'Modality'): self.modalityResultLable.setText(f'{image.Modality}')
@@ -144,34 +124,39 @@ class Ui(QtWidgets.QMainWindow):
             else : self.bodyPartExaminedResultLable.setText('------')
             if hasattr(image, 'PatientAge'): self.patientAgeResultLable.setText(f'{image.PatientAge}')
             else : self.patientAgeResultLable.setText('------')
-            if hasattr(image, 'Rows'): self.widthLable.setText(f'{image.Rows}')
-            else : self.widthLable.setText('------')
-            if hasattr(image, 'Columns'): self.heightLable.setText(f'{image.Columns}')
-            else : self.heightLable.setText('------')
+            if hasattr(image, 'Rows'): self.oldImageWidthLable.setText(f'{image.Rows}')
+            else : self.oldImageWidthLable.setText('------')
+            if hasattr(image, 'Columns'): self.oldImageHeightLable.setText(f'{image.Columns}')
+            else : self.oldImageHeightLable.setText('------')
             if hasattr(image, 'BitsAllocated'): self.bitDepthResultLable.setText(f'{image.BitsAllocated}')
             else : self.bitDepthResultLable.setText('------')
             if hasattr(image, 'PhotometricInterpretation'): self.imageColorResultLable.setText(f'{image.PhotometricInterpretation}')
             else : self.imageColorResultLable.setText('------')
             if hasattr(image, 'PatientName'): self.patientNameResultLable.setText(f'{image.PatientName}')
             else : self.patientNameResultLable.setText('------')
-            self.totalSizeResultLable.setText(f'{os.path.getsize(imagePath)}')  
+            self.totalSizeResultLable.setText(f'{size}')  
         except:
             # Call helper function to show an error message
-            self.ShowPopUpMessage("Can not open this file.")
+            self.ShowPopUpMessage("Corrupted Image! Please choose a valid one.")
 
 ############################################################################################
 
-    def test(self):
+    def canvas(self):
+        
+            self.figure = plt.figure(figsize=(15,5))
+            self.Canvas = FigureCanvas(self.figure)
+            self.originaImageGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
 
-        self.figure = plt.figure(figsize=(15,5))
-        self.Canvas = FigureCanvas(self.figure)
-        self.nearestNeighborGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+            self.figure = plt.figure(figsize=(15,5))
+            self.Canvas = FigureCanvas(self.figure)
+            self.nearestNeighborGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
 
-        self.figure = plt.figure(figsize=(15,5))
-        self.Canvas = FigureCanvas(self.figure)
-        self.linearGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+            self.figure = plt.figure(figsize=(15,5))
+            self.Canvas = FigureCanvas(self.figure)
+            self.linearGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
 
     def openImageZoomTab(self):
+
         #* Get image path
         fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images', "Image files (*.jpg *.jpeg *.bmp *.dcm)")
         imagePath = fileName[0]
@@ -181,47 +166,111 @@ class Ui(QtWidgets.QMainWindow):
         self.Canvas = FigureCanvas(self.figure)
         self.originaImageGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
 
-        #* Open image then view it in the GUI
-        self.image = Image.open(imagePath).convert('L')
-        plt.imshow(self.image, cmap=plt.cm.gray)
-        self.Canvas.draw()
+        #* Check image format then call its function
+        if (pathlib.Path(imagePath).suffix == ".jpg") or (pathlib.Path(imagePath).suffix == ".bmp") or (pathlib.Path(imagePath).suffix == ".jpeg"):
+    
+            try:
+                self.image = Image.open(imagePath).convert('L')
+                plt.imshow(self.image, cmap=plt.cm.gray)
+                self.imageArray = np.asarray(self.image)
+                print(self.imageArray)
+                self.oldImageWidth = self.image.width
+                self.oldImageHeight = self.image.height
+                self.Canvas.draw()
+            except:
+                self.ShowPopUpMessage("Corrupted Image! Please choose a valid one")
 
+
+        elif pathlib.Path(imagePath).suffix == ".dcm":
+            
+            try:
+                self.image = dicom.dcmread(imagePath)
+                new_image = self.image.pixel_array.astype(float)
+                self.imageArray = (np.maximum(new_image, 0) / new_image.max()) * 255.0
+                self.imageArray = np.uint8(self.imageArray)
+                final_image = Image.fromarray(self.imageArray)
+                print(self.imageArray)
+                self.oldImageWidth = self.image.Rows
+                self.oldImageHeight = self.image.Columns 
+                plt.imshow(self.image.pixel_array,cmap=plt.cm.gray)
+                self.Canvas.draw()
+            except:
+                self.ShowPopUpMessage("Corrupted Image! Please choose a valid one")
         
     def zoom(self):
 
-        imageArray = np.asarray(self.image)
-        # data = Image.fromarray(imageArray)
-        # data.save('dummy_pic.png')
-        print(imageArray)
-        print(imageArray.shape)
+        factor = self.doubleSpinBox.value()
+        if factor == 0 :
+            self.ShowPopUpMessage("You Can't Zoom By Factor Zero!")
+            pass
+        else:
+            newImageWidth = int(factor * self.oldImageWidth)
+            newImageHeight = int(factor * self.oldImageHeight) 
 
-        factor = int(self.lineEdit.text())
-        colSize = factor * self.image.width
-        rowSize = factor * self.image.height
+            newImageArray = np.empty([newImageHeight, newImageWidth])
 
-        newImageArray = np.empty([rowSize, colSize])
-        for i in range(rowSize):
-            for j in range(colSize):
+            self.interpolationNearest(newImageHeight, newImageWidth, factor, newImageArray)
+            self.convertArrayToImagePolt(newImageArray, self.nearestNeighborGridLayout)
+
+            newImageArray = self.interpolateBilinear(self.imageArray, self.oldImageWidth, self.oldImageHeight, newImageArray, newImageWidth, newImageHeight)
+            self.convertArrayToImagePolt(newImageArray, self.linearGridLayout)
+
+    def interpolationNearest(self, newImageHeight, newImageWidth, factor, newImageArray):
+
+        for i in range(newImageHeight):
+            for j in range(newImageWidth):
                 newrow = i/factor
                 newcol = j/factor
-                newrowImg = self.interpolationRound(newrow)
-                newcolImg = self.interpolationRound(newcol)
-                newImageArray[i, j] = imageArray[newrowImg, newcolImg]
-                # print(col,end=" ")
+                newrowImg = int(np.floor(newrow))
+                newcolImg = int(np.floor(newcol))
+                newImageArray[i, j] = self.imageArray[newrowImg, newcolImg]
 
-        print(newImageArray.shape)
-        print(newImageArray)
-        data = Image.fromarray(newImageArray)
-        if data.mode != 'RGB':
-            data = data.convert('RGB')
-        data.save('dummy_pic.png')
+        return newImageArray
 
+    def interpolateBilinear(self, imageArray, oldImageWidth, oldImageHeight, newImageArray, newImageWidth, newImageHeight):
+
+        for i in range(newImageHeight):
+            for j in range(newImageWidth):
+                # Relative coordinates of the pixel in output space
+                x_out = j / newImageWidth
+                y_out = i / newImageHeight
+
+                # Corresponding absolute coordinates of the pixel in input space
+                x_in = (x_out * oldImageWidth)
+                y_in = (y_out * oldImageHeight)
+
+                # Nearest neighbours coordinates in input space
+                x_prev = int(np.floor(x_in))
+                x_next = x_prev + 1
+                y_prev = int(np.floor(y_in))
+                y_next = y_prev + 1
+
+                # Sanitize bounds - no need to check for < 0
+                x_prev = min(x_prev, oldImageWidth - 1)
+                x_next = min(x_next, oldImageWidth - 1)
+                y_prev = min(y_prev, oldImageHeight - 1)
+                y_next = min(y_next, oldImageHeight - 1)
+                
+                # Distances between neighbour nodes in input space
+                Dy_next = y_next - y_in
+                Dy_prev = 1. - Dy_next # because next - prev = 1
+                Dx_next = x_next - x_in
+                Dx_prev = 1. - Dx_next # because next - prev = 1
+            
+                # Interpolate over 3 RGB layers
+                newImageArray[i][j] = Dy_prev * (imageArray[y_next][x_prev] * Dx_next + imageArray[y_next][x_next] * Dx_prev) \
+                    + Dy_next * (imageArray[y_prev][x_prev]* Dx_next + imageArray[y_prev][x_next] * Dx_prev)
+                    
+        return newImageArray
+
+    def convertArrayToImagePolt(self, newImageArray, layout):
+
+        im = Image.fromarray(np.uint8(newImageArray))
         self.figure = plt.figure(figsize=(15,5))
         self.Canvas = FigureCanvas(self.figure)
-        self.nearestNeighborGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
-        plt.imshow(data, cmap=plt.cm.gray)
+        layout.addWidget(self.Canvas,0, 0, 1, 1)
+        plt.imshow(im, cmap=plt.cm.gray)
         self.Canvas.draw()
-
 
     def interpolationRound(self, val):
         if round(val,1) == 0.5:
@@ -229,6 +278,7 @@ class Ui(QtWidgets.QMainWindow):
         else:
             val = round(val)
         return val
+
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
                                                 #?######## Helper Functions #########
@@ -257,10 +307,12 @@ class Ui(QtWidgets.QMainWindow):
 
     #! Show an Error Message for Handling Invalid files
     def ShowPopUpMessage(self, popUpMessage):
-        messageBoxElement = QMessageBox()
-        messageBoxElement.setWindowTitle("ERROR")
-        messageBoxElement.setText(popUpMessage)
-        execute = messageBoxElement.exec_()
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText("Error")
+        msg.setInformativeText(popUpMessage)
+        msg.setWindowTitle("Error")
+        msg.exec_()
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
