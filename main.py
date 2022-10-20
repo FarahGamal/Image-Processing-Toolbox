@@ -7,6 +7,7 @@ import pydicom as dicom
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 from PyQt5 import  QtWidgets,uic
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
@@ -19,9 +20,6 @@ class Ui(QtWidgets.QMainWindow):
         self.setWindowTitle("Image Viewer")
         self.show()
 
-        #?######### Initializations ##########
-
-
         #!?######### Links of GUI Elements to Methods ##########
 
         self.browseButton.clicked.connect(self.openImage)
@@ -31,6 +29,8 @@ class Ui(QtWidgets.QMainWindow):
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
                                                 #?######## Main Methods #########
+                                              
+                                                #?######## Task 1 Functions  #########
 
     #! Browse and get image path then call a specific function according to image format
     def openImage(self):
@@ -50,14 +50,15 @@ class Ui(QtWidgets.QMainWindow):
 
         # This try and except to handel corrupted image 
         try:
+            #* Canvas to view image on it
             self.figure = plt.figure(figsize=(15,5))
             self.Canvas = FigureCanvas(self.figure)
             self.gridLayout.addWidget(self.Canvas,0, 0, 1, 1)
 
             #* Open image then view it in the GUI
-            image = Image.open(imagePath).convert('L')
+            image = Image.open(imagePath)
 
-            #* Converting RGB image to grey scale
+            #* Get channel number
             imageShape = np.array(image)
             if imageShape.ndim == 2:
                 channels = 1
@@ -96,6 +97,7 @@ class Ui(QtWidgets.QMainWindow):
 
         # This try and except to handel corrupted image 
         try:
+            #* Canvas to view image on it
             self.figure = plt.figure(figsize=(15,5))
             self.Canvas = FigureCanvas(self.figure)
             self.gridLayout.addWidget(self.Canvas,0, 0, 1, 1)
@@ -133,84 +135,156 @@ class Ui(QtWidgets.QMainWindow):
             # Call helper function to show an error message
             self.ShowPopUpMessage("Corrupted Image! Please choose a valid one.")
 
-############################################################################################
+#?-----------------------------------------------------------------------------------------------------------------------------#
 
+                                                #?######## Task 2 Functions  #########
+
+    #! Open image and disply it on the GUI
     def openImageZoomTab(self):
+
+        #* Clear labels
+        self.originalWH.clear()
+        self.nearestWH.clear()
+        self.linearWH.clear()
+        self.nearestLabel.clear()
+        self.bilinearLabel.clear()
+
+        #* Draw canvas to display image on it
+        self.figure = plt.figure(figsize=(15,5))
+        self.Canvas = FigureCanvas(self.figure)
+        self.originaImageGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
 
         #* Get image path
         fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images', "Image files (*.jpg *.jpeg *.bmp *.dcm)")
         imagePath = fileName[0]
 
-        #* Check image format then call its function
-        self.figure = plt.figure(figsize=(15,5))
-        self.Canvas = FigureCanvas(self.figure)
-        self.originaImageGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
-
-        #* Check image format then call its function
+        #* Check image format then convert image to 2D array and display it
+        #* If it jpg or jpeg or bmp
         if (pathlib.Path(imagePath).suffix == ".jpg") or (pathlib.Path(imagePath).suffix == ".bmp") or (pathlib.Path(imagePath).suffix == ".jpeg"):
-    
+            
+            #* Try and except to handdel corrupted image
             try:
-                self.image = Image.open(imagePath).convert('L')
-                plt.imshow(self.image, cmap=plt.cm.gray)
-                self.imageArray = np.asarray(self.image)
+
+                #* First we convert image to gray scale
+                self.image = Image.open(imagePath)
+                imageShape = np.array(self.image)
+                
+                #* Check if the image grey scale or not 
+                if imageShape.ndim == 2 and self.image.mode == 'L':
+                    #* Convert image to 2D array
+                    self.imageArray = np.asarray(self.image)
+                    plt.imshow(self.image, cmap='gray')
+                else:
+                    #* Convert to grey scale
+                    img = mpimg.imread(imagePath)
+                    R, G, B = img[:, :, 0], img[:, :, 1], img[:, :, 2]
+                    gray_img = 0.2989 * R + 0.587 * G + 0.114 * B
+                    self.imageArray = np.asarray(gray_img)
+                    plt.imshow(gray_img, cmap='gray')
+
+                #* plot image on the canvas using pillow 
+                self.Canvas.draw()
+
+                #* Get width and height from image atributtes 
                 self.oldImageWidth = self.image.width
                 self.oldImageHeight = self.image.height
-                self.Canvas.draw()
+
+                #* Display dimension of the image
                 self.originalWH.setText(str(self.oldImageWidth) + str(' x ') + str(self.oldImageHeight))
             except:
+
+                #* Show Error message
                 self.ShowPopUpMessage("Corrupted Image! Please choose a valid one")
+        #* If DICOM image
         elif pathlib.Path(imagePath).suffix == ".dcm":
-            
+
+            #* Try and except to handdel corrupted image
             try:
+
+                #* Read DICOM image    
                 self.image = dicom.dcmread(imagePath)
+
+                #* Convert image 2D array
                 new_image = self.image.pixel_array.astype(float)
                 self.imageArray = (np.maximum(new_image, 0) / new_image.max()) * 255.0
                 self.imageArray = np.uint8(self.imageArray)
-                final_image = Image.fromarray(self.imageArray)
-                self.oldImageWidth = self.image.Rows
-                self.oldImageHeight = self.image.Columns 
+                
+                #* plot image on the canvas using pillow  
                 plt.imshow(self.image.pixel_array,cmap=plt.cm.gray)
                 self.Canvas.draw()
+
+                #* Get width and height from image atributtes 
+                self.oldImageWidth = self.image.Rows
+                self.oldImageHeight = self.image.Columns
+
+                #* Display dimension of the image
                 self.originalWH.setText(str(self.oldImageWidth) + str(' x ') + str(self.oldImageHeight))
             except:
+
+                #* Show Error message
                 self.ShowPopUpMessage("Corrupted Image! Please choose a valid one")
-        
+
+    #! Call functions of interpolation to make zoom    
     def zoom(self):
 
+        #* Get zooming factor from user
         factor = self.doubleSpinBox.value()
-        if factor == 0 :
+
+        #* Check if factor equals to zero show error message else make zoom
+        if factor <= 0 :
             self.ShowPopUpMessage("You Can't Zoom By Factor Zero!")
             pass
         else:
+
+            #* Calculate new width and height
             newImageWidth = int(factor * self.oldImageWidth)
             newImageHeight = int(factor * self.oldImageHeight) 
 
+            #* Make an empty 2D array for the zoomed image 
             newImageArray = np.empty([newImageHeight, newImageWidth])
 
+            #* Call Nearest-neighbor function 
             self.interpolationNearest(newImageHeight, newImageWidth, factor, newImageArray)
-            self.convertArrayToImagePolt(newImageArray, self.nearestLabel)
-            self.nearestWH.setText(str(newImageWidth) + str(' x ') + str(newImageHeight))
 
+            #* Call this function to convert 2D array to an image then display it
+            self.convertArrayToImagePolt(newImageArray, self.nearestLabel, self.nearestWH)
+
+            #* Call Bilinear function 
             newImageArray = self.interpolateBilinear(self.imageArray, self.oldImageWidth, self.oldImageHeight, newImageArray, newImageWidth, newImageHeight)
-            self.convertArrayToImagePolt(newImageArray, self.bilinearLabel)
-            self.linearWH.setText(str(newImageWidth) + str(' x ') + str(newImageHeight))
 
+            #* Call this function to convert 2D array to an image then display it
+            self.convertArrayToImagePolt(newImageArray, self.bilinearLabel, self.linearWH)
+        
+    #! Nearest-neighbor Interpolation function
+    #* Take new width and height of new image, factor and new image array
     def interpolationNearest(self, newImageHeight, newImageWidth, factor, newImageArray):
 
+        #* Loop on new image by two for loops, outer for rows(height) innner for columns(width)
         for i in range(newImageHeight):
             for j in range(newImageWidth):
-                newrow = i/factor
-                newcol = j/factor
-                newrowImg = int(np.floor(newrow))
-                newcolImg = int(np.floor(newcol))
-                newImageArray[i, j] = self.imageArray[newrowImg, newcolImg]
 
+                #* Get new coordinates the divide coordinate by factor
+                newRowCoordinate = i/factor
+                newColCoordinate = j/factor
+
+                #* floor result
+                newRowCoordinateImg = int(np.floor(newRowCoordinate))
+                newColCoordinateImg = int(np.floor(newColCoordinate))
+
+                #* Get the value of the coordinate then insert it in image array
+                newImageArray[i, j] = self.imageArray[newRowCoordinateImg, newColCoordinateImg]
+
+        #* After looping on the image we return an array of zoomed image
         return newImageArray
 
+    #! Bi-linear Interpolation Function
+    #* Take old image array, width and height and new image array, width, height
     def interpolateBilinear(self, imageArray, oldImageWidth, oldImageHeight, newImageArray, newImageWidth, newImageHeight):
-
+        
+        #* Loop on new image by two for loops, outer for rows(height) innner for columns(width)
         for i in range(newImageHeight):
             for j in range(newImageWidth):
+
                 # Relative coordinates of the pixel in output space
                 x_out = j / newImageWidth
                 y_out = i / newImageHeight
@@ -240,16 +314,11 @@ class Ui(QtWidgets.QMainWindow):
                 # Interpolate over 3 RGB layers
                 newImageArray[i][j] = Dy_prev * (imageArray[y_next][x_prev] * Dx_next + imageArray[y_next][x_next] * Dx_prev) \
                     + Dy_next * (imageArray[y_prev][x_prev]* Dx_next + imageArray[y_prev][x_next] * Dx_prev)
-                    
+        
+        #* After looping on the image we return an array of zoomed image            
         return newImageArray
 
-    def convertArrayToImagePolt(self, newImageArray, layout):
-
-        im = Image.fromarray(np.uint8(newImageArray))
-        qimg = im.toqpixmap()
-        layout.clear()
-        layout.setPixmap(qimg)
-
+    
     def interpolationRound(self, val):
         if round(val,1) == 0.5:
             val = int(val)
@@ -257,10 +326,13 @@ class Ui(QtWidgets.QMainWindow):
             val = round(val)
         return val
 
+
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
                                                 #?######## Helper Functions #########
 
+                                                #?######## Task 1  Helper Functions  #########
+                                                
     #! Hide all the attributes of the DICM image
     def hideDicomAttribute(self):
         self.patientNameResultLable.hide()
@@ -283,7 +355,41 @@ class Ui(QtWidgets.QMainWindow):
         self.bodyPartExaminedTitleLable.show()
         self.patientAgeTitleLable.show()
 
+
+                                                #?######## Task 2 Helper Functions  #########
+
+    #! Convert 2D array to image the display it
+    #* Take array of new image, label name and layout name
+    def convertArrayToImagePolt(self, newImageArray, layout, label):
+        #* First clear layout 
+        layout.clear()
+
+        #* Convert 2D array to image 
+        image = Image.fromarray(np.uint8(newImageArray))
+        
+        #* Display image on label
+        qimg = image.toqpixmap()
+        layout.setPixmap(qimg)
+
+        #* Call this function that display dimension of the zoomed image
+        self.displayDimension(image, label)
+
+    #! Calculate and Display dimension of image
+    #* Take image and label name
+    def displayDimension(self, image, label):
+
+        #* Get width and height from image it self
+        width = image.width
+        height = image.height
+
+        #* Set text of label with width and height
+        label.setText(str(width) + str(' x ') + str(height))
+                                               
+
+                                                #?######## General Helper Functions  #########
+
     #! Show an Error Message for Handling Invalid files
+    #* Take Error message as a text
     def ShowPopUpMessage(self, popUpMessage):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Critical)
