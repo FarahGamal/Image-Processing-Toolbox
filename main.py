@@ -1,32 +1,26 @@
 ########## Imports ##########
 
-from operator import ne
-from tkinter import Canvas
 import numpy as np
+import sys, pathlib
 from PIL import Image
-import sys, os, pathlib, cv2
 import pydicom as dicom
 from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 import matplotlib.pyplot as plt
 from PyQt5 import  QtWidgets,uic
-from PyQt5.QtWidgets import *
-from matplotlib.figure import Figure
-import matplotlib.pyplot as plot
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-#?-----------------------------------------------------------------------------------------------------------------------------#
+#?-----------------------------------------------------------------------------------------------------------------------------# 
 
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui, self).__init__()
-        uic.loadUi('GUI.ui', self)
+        uic.loadUi('GUI2.ui', self)
         self.setWindowTitle("Image Viewer")
         self.show()
 
         #?######### Initializations ##########
 
-        self.canvas()
 
         #!?######### Links of GUI Elements to Methods ##########
 
@@ -54,7 +48,7 @@ class Ui(QtWidgets.QMainWindow):
     #! View jpg and bmp image format and show its attributes
     def jpgAndBmpFormat(self, imagePath):
 
-# This try and except to handel corrupted image 
+        # This try and except to handel corrupted image 
         try:
             self.figure = plt.figure(figsize=(15,5))
             self.Canvas = FigureCanvas(self.figure)
@@ -141,20 +135,6 @@ class Ui(QtWidgets.QMainWindow):
 
 ############################################################################################
 
-    def canvas(self):
-        
-            self.figure = plt.figure(figsize=(15,5))
-            self.Canvas = FigureCanvas(self.figure)
-            self.originaImageGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
-
-            self.figure = plt.figure(figsize=(15,5))
-            self.Canvas = FigureCanvas(self.figure)
-            self.nearestNeighborGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
-
-            self.figure = plt.figure(figsize=(15,5))
-            self.Canvas = FigureCanvas(self.figure)
-            self.linearGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
-
     def openImageZoomTab(self):
 
         #* Get image path
@@ -173,14 +153,12 @@ class Ui(QtWidgets.QMainWindow):
                 self.image = Image.open(imagePath).convert('L')
                 plt.imshow(self.image, cmap=plt.cm.gray)
                 self.imageArray = np.asarray(self.image)
-                print(self.imageArray)
                 self.oldImageWidth = self.image.width
                 self.oldImageHeight = self.image.height
                 self.Canvas.draw()
+                self.originalWH.setText(str(self.oldImageWidth) + str(' x ') + str(self.oldImageHeight))
             except:
                 self.ShowPopUpMessage("Corrupted Image! Please choose a valid one")
-
-
         elif pathlib.Path(imagePath).suffix == ".dcm":
             
             try:
@@ -189,11 +167,11 @@ class Ui(QtWidgets.QMainWindow):
                 self.imageArray = (np.maximum(new_image, 0) / new_image.max()) * 255.0
                 self.imageArray = np.uint8(self.imageArray)
                 final_image = Image.fromarray(self.imageArray)
-                print(self.imageArray)
                 self.oldImageWidth = self.image.Rows
                 self.oldImageHeight = self.image.Columns 
                 plt.imshow(self.image.pixel_array,cmap=plt.cm.gray)
                 self.Canvas.draw()
+                self.originalWH.setText(str(self.oldImageWidth) + str(' x ') + str(self.oldImageHeight))
             except:
                 self.ShowPopUpMessage("Corrupted Image! Please choose a valid one")
         
@@ -210,10 +188,12 @@ class Ui(QtWidgets.QMainWindow):
             newImageArray = np.empty([newImageHeight, newImageWidth])
 
             self.interpolationNearest(newImageHeight, newImageWidth, factor, newImageArray)
-            self.convertArrayToImagePolt(newImageArray, self.nearestNeighborGridLayout)
+            self.convertArrayToImagePolt(newImageArray, self.nearestLabel)
+            self.nearestWH.setText(str(newImageWidth) + str(' x ') + str(newImageHeight))
 
             newImageArray = self.interpolateBilinear(self.imageArray, self.oldImageWidth, self.oldImageHeight, newImageArray, newImageWidth, newImageHeight)
-            self.convertArrayToImagePolt(newImageArray, self.linearGridLayout)
+            self.convertArrayToImagePolt(newImageArray, self.bilinearLabel)
+            self.linearWH.setText(str(newImageWidth) + str(' x ') + str(newImageHeight))
 
     def interpolationNearest(self, newImageHeight, newImageWidth, factor, newImageArray):
 
@@ -266,11 +246,9 @@ class Ui(QtWidgets.QMainWindow):
     def convertArrayToImagePolt(self, newImageArray, layout):
 
         im = Image.fromarray(np.uint8(newImageArray))
-        self.figure = plt.figure(figsize=(15,5))
-        self.Canvas = FigureCanvas(self.figure)
-        layout.addWidget(self.Canvas,0, 0, 1, 1)
-        plt.imshow(im, cmap=plt.cm.gray)
-        self.Canvas.draw()
+        qimg = im.toqpixmap()
+        layout.clear()
+        layout.setPixmap(qimg)
 
     def interpolationRound(self, val):
         if round(val,1) == 0.5:
