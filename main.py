@@ -35,6 +35,16 @@ class Ui(QtWidgets.QMainWindow):
     #! Browse and get image path then call a specific function according to image format
     def openImage(self):
 
+        self.modalityResultLable.clear()
+        self.bodyPartExaminedResultLable.clear()
+        self.patientAgeResultLable.clear()
+        self.widthLable.clear()
+        self.heightLable.clear()
+        self.bitDepthResultLable.clear()
+        self.imageColorResultLable.clear()
+        self.patientNameResultLable.clear()
+        self.totalSizeResultLable.clear()
+
         #* Get image path
         fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images', "Image files (*.jpg *.jpeg *.bmp *.dcm)")
         imagePath = fileName[0]
@@ -120,10 +130,10 @@ class Ui(QtWidgets.QMainWindow):
             else : self.bodyPartExaminedResultLable.setText('------')
             if hasattr(image, 'PatientAge'): self.patientAgeResultLable.setText(f'{image.PatientAge}')
             else : self.patientAgeResultLable.setText('------')
-            if hasattr(image, 'Rows'): self.oldImageWidthLable.setText(f'{image.Rows}')
-            else : self.oldImageWidthLable.setText('------')
-            if hasattr(image, 'Columns'): self.oldImageHeightLable.setText(f'{image.Columns}')
-            else : self.oldImageHeightLable.setText('------')
+            if hasattr(image, 'Rows'): self.widthLable.setText(f'{image.Rows}')
+            else : self.widthLable.setText('------')
+            if hasattr(image, 'Columns'): self.heightLable.setText(f'{image.Columns}')
+            else : self.heightLable.setText('------')
             if hasattr(image, 'BitsAllocated'): self.bitDepthResultLable.setText(f'{image.BitsAllocated}')
             else : self.bitDepthResultLable.setText('------')
             if hasattr(image, 'PhotometricInterpretation'): self.imageColorResultLable.setText(f'{image.PhotometricInterpretation}')
