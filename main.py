@@ -1,9 +1,9 @@
 ########## Imports ##########
 
 import numpy as np
-import sys, pathlib
 from PIL import Image
 import pydicom as dicom
+import sys, pathlib, math
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 import matplotlib.pyplot as plt
@@ -35,6 +35,7 @@ class Ui(QtWidgets.QMainWindow):
     #! Browse and get image path then call a specific function according to image format
     def openImage(self):
 
+        #* Clear Labels
         self.modalityResultLable.clear()
         self.bodyPartExaminedResultLable.clear()
         self.patientAgeResultLable.clear()
@@ -70,12 +71,8 @@ class Ui(QtWidgets.QMainWindow):
 
             #* Get channel number
             imageShape = np.array(image)
-            if imageShape.ndim == 2:
-                channels = 1
-                print("image has 1 channel")
-            else:
-                channels = imageShape.shape[-1]
-                print("image has", channels, "channels")
+            if imageShape.ndim == 2: channels = 1
+            else: channels = imageShape.shape[-1]
 
             #* View image on GUI
             plt.imshow(image, cmap=plt.cm.gray)
@@ -85,8 +82,6 @@ class Ui(QtWidgets.QMainWindow):
             self.hideDicomAttribute()
 
             #* Calculate bit depth
-            print(int(np.amax(imageShape)))
-            print(int(np.amin(imageShape)))
             bitDepth =  (np.ceil(np.log2((int(np.amax(imageShape)))-(int(np.amin(imageShape)))+1))) * channels
 
             #* Calculate total size
@@ -152,191 +147,231 @@ class Ui(QtWidgets.QMainWindow):
     #! Open image and disply it on the GUI
     def openImageZoomTab(self):
 
-        #* Clear labels
-        self.originalWH.clear()
-        self.nearestWH.clear()
-        self.linearWH.clear()
-        self.nearestLabel.clear()
-        self.bilinearLabel.clear()
+        try:    
+            #* Clear labels
+            self.originalWH.clear()
+            self.nearestWH.clear()
+            self.linearWH.clear()
+            self.nearestLabel.clear()
+            self.bilinearLabel.clear()
 
-        #* Draw canvas to display image on it
-        self.figure = plt.figure(figsize=(15,5))
-        self.Canvas = FigureCanvas(self.figure)
-        self.originaImageGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+            #* Draw canvas to display image on it
+            self.figure = plt.figure(figsize=(15,5))
+            self.Canvas = FigureCanvas(self.figure)
+            self.originaImageGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
 
-        #* Get image path
-        fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images', "Image files (*.jpg *.jpeg *.bmp *.dcm)")
-        imagePath = fileName[0]
+            #* Get image path
+            fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images', "Image files (*.jpg *.jpeg *.bmp *.dcm)")
+            imagePath = fileName[0]
 
-        #* Check image format then convert image to 2D array and display it
-        #* If it jpg or jpeg or bmp
-        if (pathlib.Path(imagePath).suffix == ".jpg") or (pathlib.Path(imagePath).suffix == ".bmp") or (pathlib.Path(imagePath).suffix == ".jpeg"):
-            
-            #* Try and except to handdel corrupted image
-            try:
-
-                #* First we convert image to gray scale
-                self.image = Image.open(imagePath)
-                imageShape = np.array(self.image)
+            #* Check image format then convert image to 2D array and display it
+            #* If image is jpg or jpeg or bmp
+            if (pathlib.Path(imagePath).suffix == ".jpg") or (pathlib.Path(imagePath).suffix == ".bmp") or (pathlib.Path(imagePath).suffix == ".jpeg"):
                 
-                #* Check if the image grey scale or not 
-                if imageShape.ndim == 2 and self.image.mode == 'L':
+                #* Try and except to handdel corrupted image
+                try:
+                    #* Open image
+                    self.image = Image.open(imagePath)
                     #* Convert image to 2D array
-                    self.imageArray = np.asarray(self.image)
-                    plt.imshow(self.image, cmap='gray')
-                else:
-                    #* Convert to grey scale
-                    img = mpimg.imread(imagePath)
-                    R, G, B = img[:, :, 0], img[:, :, 1], img[:, :, 2]
-                    gray_img = 0.2989 * R + 0.587 * G + 0.114 * B
-                    self.imageArray = np.asarray(gray_img)
-                    plt.imshow(gray_img, cmap='gray')
+                    imageShape = np.array(self.image)
+                    
+                    #* Check if the image grey scale or not 
+                    if imageShape.ndim == 2 and self.image.mode == 'L':
+                        #* Convert image to 2D array
+                        self.imageArray = np.asarray(self.image)
+                        plt.imshow(self.image, cmap='gray')
+                    else:
+                        #* Convert to grey scale
+                        img = mpimg.imread(imagePath)
+                        R, G, B = img[:, :, 0], img[:, :, 1], img[:, :, 2]
+                        gray_img = 0.2989 * R + 0.587 * G + 0.114 * B
+                        self.imageArray = np.asarray(gray_img)
+                        plt.imshow(gray_img, cmap='gray')
 
-                #* plot image on the canvas using pillow 
-                self.Canvas.draw()
+                    #* plot image on the canvas using pillow 
+                    self.Canvas.draw()
 
-                #* Get width and height from image atributtes 
-                self.oldImageWidth = self.image.width
-                self.oldImageHeight = self.image.height
+                    #* Get width and height from image attributes 
+                    self.oldImageWidth = self.image.width
+                    self.oldImageHeight = self.image.height
 
-                #* Display dimension of the image
-                self.originalWH.setText(str(self.oldImageWidth) + str(' x ') + str(self.oldImageHeight))
-            except:
+                    #* Display dimension of the image
+                    self.originalWH.setText(str(self.oldImageWidth) + str(' x ') + str(self.oldImageHeight))
+                except:
 
-                #* Show Error message
-                self.ShowPopUpMessage("Corrupted Image! Please choose a valid one")
-        #* If DICOM image
-        elif pathlib.Path(imagePath).suffix == ".dcm":
+                    #* Show Error message
+                    self.ShowPopUpMessage("Corrupted Image! Please choose a valid one")
+            #* If DICOM image
+            elif pathlib.Path(imagePath).suffix == ".dcm":
 
-            #* Try and except to handdel corrupted image
-            try:
+                #* Try and except to handdel corrupted image
+                try:
 
-                #* Read DICOM image    
-                self.image = dicom.dcmread(imagePath)
+                    #* Read DICOM image    
+                    self.image = dicom.dcmread(imagePath)
 
-                #* Convert image 2D array
-                new_image = self.image.pixel_array.astype(float)
-                self.imageArray = (np.maximum(new_image, 0) / new_image.max()) * 255.0
-                self.imageArray = np.uint8(self.imageArray)
-                
-                #* plot image on the canvas using pillow  
-                plt.imshow(self.image.pixel_array,cmap=plt.cm.gray)
-                self.Canvas.draw()
+                    #* Convert image 2D array
+                    new_image = self.image.pixel_array.astype(float)
+                    self.imageArray = (np.maximum(new_image, 0) / new_image.max()) * 255.0
+                    self.imageArray = np.uint8(self.imageArray)
+                    
+                    #* plot image on the canvas using pillow  
+                    plt.imshow(self.image.pixel_array,cmap=plt.cm.gray)
+                    self.Canvas.draw()
 
-                #* Get width and height from image atributtes 
-                self.oldImageWidth = self.image.Rows
-                self.oldImageHeight = self.image.Columns
+                    #* Get width and height from image attributes 
+                    self.oldImageWidth = self.image.Rows
+                    self.oldImageHeight = self.image.Columns
 
-                #* Display dimension of the image
-                self.originalWH.setText(str(self.oldImageWidth) + str(' x ') + str(self.oldImageHeight))
-            except:
+                    #* Display dimension of the image
+                    self.originalWH.setText(str(self.oldImageWidth) + str(' x ') + str(self.oldImageHeight))
+                except:
 
-                #* Show Error message
-                self.ShowPopUpMessage("Corrupted Image! Please choose a valid one")
+                    #* Show Error message
+                    self.ShowPopUpMessage("Corrupted Image! Please choose a valid one")
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
 
     #! Call functions of interpolation to make zoom    
     def zoom(self):
 
-        #* Get zooming factor from user
-        factor = self.doubleSpinBox.value()
+        try:
+            #* Get zooming factor from user
+            factor = self.doubleSpinBox.value()
 
-        #* Check if factor equals to zero show error message else make zoom
-        if factor <= 0 :
-            self.ShowPopUpMessage("You Can't Zoom By Factor Zero!")
-            pass
-        else:
+            #* Check if factor equals to zero show error message else make zoom
+            if factor <= 0 :
+                self.ShowPopUpMessage("You Can't Zoom By Factor Zero!")
+                pass
+            else:
 
-            #* Calculate new width and height
-            newImageWidth = int(factor * self.oldImageWidth)
-            newImageHeight = int(factor * self.oldImageHeight) 
+                #* Calculate new width and height
+                newImageWidth = int(factor * self.oldImageWidth)
+                newImageHeight = int(factor * self.oldImageHeight) 
 
-            #* Make an empty 2D array for the zoomed image 
-            newImageArray = np.empty([newImageHeight, newImageWidth])
+                #* Make an empty 2D array for the zoomed image 
+                newImageArray = np.empty([newImageHeight, newImageWidth])
 
-            #* Call Nearest-neighbor function 
-            self.interpolationNearest(newImageHeight, newImageWidth, factor, newImageArray)
+                #* Call Nearest-neighbor function 
+                self.nearestInterpolation(newImageHeight, newImageWidth, factor, newImageArray)
 
-            #* Call this function to convert 2D array to an image then display it
-            self.convertArrayToImagePolt(newImageArray, self.nearestLabel, self.nearestWH)
+                #* Call this function to convert 2D array to an image then display it
+                self.convertArrayToImagePolt(newImageArray, self.nearestLabel, self.nearestWH)
 
-            #* Call Bilinear function 
-            newImageArray = self.interpolateBilinear(self.imageArray, self.oldImageWidth, self.oldImageHeight, newImageArray, newImageWidth, newImageHeight)
+                #* Call Bilinear function 
+                newImageArray = self.bilinearInterpolation(self.imageArray, self.oldImageWidth, self.oldImageHeight, newImageArray, newImageWidth, newImageHeight)
 
-            #* Call this function to convert 2D array to an image then display it
-            self.convertArrayToImagePolt(newImageArray, self.bilinearLabel, self.linearWH)
-        
+                #* Call this function to convert 2D array to an image then display it
+                self.convertArrayToImagePolt(newImageArray, self.bilinearLabel, self.linearWH)
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
+ 
     #! Nearest-neighbor Interpolation function
     #* Take new width and height of new image, factor and new image array
-    def interpolationNearest(self, newImageHeight, newImageWidth, factor, newImageArray):
+    def nearestInterpolation(self, newImageHeight, newImageWidth, factor, newImageArray):
 
-        #* Loop on new image by two for loops, outer for rows(height) innner for columns(width)
-        for i in range(newImageHeight):
-            for j in range(newImageWidth):
+        try:
+            #* Loop on new image by two for loops, outer for rows(height) innner for columns(width)
+            for i in range(newImageHeight):
+                for j in range(newImageWidth):
 
-                #* Get new coordinates the divide coordinate by factor
-                newRowCoordinate = i/factor
-                newColCoordinate = j/factor
+                    #* Get new coordinates the divide coordinate by factor
+                    newRowCoordinate = i/factor
+                    newColCoordinate = j/factor
 
-                #* floor result
-                newRowCoordinateImg = int(np.floor(newRowCoordinate))
-                newColCoordinateImg = int(np.floor(newColCoordinate))
+                    #* floor result
+                    newRowCoordinateImg = int(np.floor(newRowCoordinate))
+                    newColCoordinateImg = int(np.floor(newColCoordinate))
 
-                #* Get the value of the coordinate then insert it in image array
-                newImageArray[i, j] = self.imageArray[newRowCoordinateImg, newColCoordinateImg]
+                    #* Get the value of the coordinate then insert it in image array
+                    newImageArray[i, j] = self.imageArray[newRowCoordinateImg, newColCoordinateImg]
 
-        #* After looping on the image we return an array of zoomed image
-        return newImageArray
+            #* After looping on the image we return an array of zoomed image
+            return newImageArray
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
 
     #! Bi-linear Interpolation Function
     #* Take old image array, width and height and new image array, width, height
-    def interpolateBilinear(self, imageArray, oldImageWidth, oldImageHeight, newImageArray, newImageWidth, newImageHeight):
-        
-        #* Loop on new image by two for loops, outer for rows(height) innner for columns(width)
-        for i in range(newImageHeight):
-            for j in range(newImageWidth):
+    def bilinearInterpolation(self, imageArray, oldImageWidth, oldImageHeight, newImageArray, newImageWidth, newImageHeight):
 
-                # Relative coordinates of the pixel in output space
-                x_out = j / newImageWidth
-                y_out = i / newImageHeight
+        try:
 
-                # Corresponding absolute coordinates of the pixel in input space
-                x_in = (x_out * oldImageWidth)
-                y_in = (y_out * oldImageHeight)
+            #* Get scaling factors of width and height
+            #* Check if the denominator equals 0 or not
+            if newImageHeight != 0: scaleFactorWidth = oldImageWidth / newImageWidth
+            else: scaleFactorWidth = 0
+            if newImageWidth != 0: scaleFactorHeight = oldImageHeight / newImageHeight  
+            else: scaleFactorHeight = 0
 
-                # Nearest neighbours coordinates in input space
-                x_prev = int(np.floor(x_in))
-                x_next = x_prev + 1
-                y_prev = int(np.floor(y_in))
-                y_next = y_prev + 1
+            #* Loop on new image by two for loops, outer for rows(height) innner for columns(width)
+            for i in range(newImageHeight):
+                for j in range(newImageWidth):
 
-                # Sanitize bounds - no need to check for < 0
-                x_prev = min(x_prev, oldImageWidth - 1)
-                x_next = min(x_next, oldImageWidth - 1)
-                y_prev = min(y_prev, oldImageHeight - 1)
-                y_next = min(y_next, oldImageHeight - 1)
-                
-                # Distances between neighbour nodes in input space
-                Dy_next = y_next - y_in
-                Dy_prev = 1. - Dy_next # because next - prev = 1
-                Dx_next = x_next - x_in
-                Dx_prev = 1. - Dx_next # because next - prev = 1
-            
-                # Interpolate over 3 RGB layers
-                newImageArray[i][j] = Dy_prev * (imageArray[y_next][x_prev] * Dx_next + imageArray[y_next][x_next] * Dx_prev) \
-                    + Dy_next * (imageArray[y_prev][x_prev]* Dx_next + imageArray[y_prev][x_next] * Dx_prev)
-        
-        #* After looping on the image we return an array of zoomed image            
-        return newImageArray
+                    #* Get coordinates by multiply current row/column to the factor scale
+                    x = i * scaleFactorHeight
+                    y = j * scaleFactorWidth
 
-    
+                    #* Here we get x and y to get 4 pixels arround the point
+                    #* We get x, y below this point using floor
+                    coordinateXFloor = math.floor(x)
+                    coordinateYFloor = math.floor(y)
+
+                    #* We get x, y above this point using ceil, we use min function 
+                    #* to make sure it will not be out the original image
+                    coordinateXCeil = min(oldImageHeight - 1, math.ceil(x))
+                    coordinateYCeil = min(oldImageWidth - 1, math.ceil(y))
+
+                    #* After calculate x, y we have 4 vlues for the 4 surrounding pixels
+                    #* here we get its values from the original image 
+                    firstPoint = imageArray[coordinateXFloor, coordinateYFloor]
+                    secondPoint = imageArray[coordinateXCeil, coordinateYFloor]
+                    thirdPoint = imageArray[coordinateXFloor, coordinateYCeil]
+                    fourthPoint = imageArray[coordinateXCeil, coordinateYCeil]
+
+                    #* Check for some cases
+
+                    #* If x ceil equals x floor that is mean that x is interger (same for y)
+                    #* so we don't need to calculate its pixel value, we get it from the original image
+                    if (coordinateXCeil == coordinateXFloor) and (coordinateYCeil == coordinateYFloor):
+                        newImageArray[i,j] = imageArray[int(x), int(y)]
+                    
+                    #* If x ceil equals to x floor so x is interger 
+                    #* so we have one value for x 
+                    #* it seems like we make linear interpolation along vertical axis
+                    elif (coordinateXCeil == coordinateXFloor):
+                        firstPixelValue = imageArray[int(x), int(coordinateYFloor)]
+                        secondPixelValue = imageArray[int(x), int(coordinateYCeil)]
+                        newImageArray[i,j] = firstPixelValue * (coordinateYCeil - y) + secondPixelValue * (y - coordinateYFloor)
+                    
+                    #* If y ceil equals to y floor so y is interger 
+                    #* so we have one value for y 
+                    #* it seems like we make linear interpolation along horizontal axis
+                    elif (coordinateYCeil == coordinateYFloor):
+                        firstPixelValue = imageArray[int(coordinateXFloor), int(y)]
+                        secondPixelValue = imageArray[int(coordinateXCeil), int(y)]
+                        newImageArray[i,j] = (firstPixelValue * (coordinateXCeil - x)) + (secondPixelValue * (x - coordinateXFloor))
+                    
+                    #* if not of the above cases found we calculate it by 
+                    #* make 2 linear interpolation along vertical and horizontal axis
+                    #* then get pixel value
+                    else:
+                        firstPixelValue = firstPoint * (coordinateXCeil - x) + secondPoint * (x - coordinateXFloor)
+                        secondPixelValue = thirdPoint * (coordinateXCeil - x) + fourthPoint * (x - coordinateXFloor)
+                        newImageArray[i,j] = firstPixelValue * (coordinateYCeil - y) + secondPixelValue * (y - coordinateYFloor)
+
+            #* After all this calculations this function return array of new image
+            return newImageArray
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
+
     def interpolationRound(self, val):
         if round(val,1) == 0.5:
             val = int(val)
         else:
             val = round(val)
         return val
-
-
+    
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
                                                 #?######## Helper Functions #########
@@ -371,6 +406,7 @@ class Ui(QtWidgets.QMainWindow):
     #! Convert 2D array to image the display it
     #* Take array of new image, label name and layout name
     def convertArrayToImagePolt(self, newImageArray, layout, label):
+        
         #* First clear layout 
         layout.clear()
 
