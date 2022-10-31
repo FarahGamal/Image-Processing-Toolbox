@@ -9,7 +9,6 @@ from PyQt5.QtWidgets import *
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from PyQt5 import  QtWidgets,uic
-import cv2 as cv
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 #?-----------------------------------------------------------------------------------------------------------------------------# 
@@ -633,6 +632,7 @@ class Ui(QtWidgets.QMainWindow):
 
         plt.imshow(image, cmap='gray')
         self.Canvas.draw()
+
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
 app = QtWidgets.QApplication(sys.argv)

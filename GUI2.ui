@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1397</width>
-    <height>811</height>
+    <width>1187</width>
+    <height>814</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -73,9 +73,6 @@
             </property>
            </spacer>
           </item>
-          <item row="1" column="1">
-           <layout class="QGridLayout" name="gridLayout"/>
-          </item>
           <item row="2" column="1">
            <spacer name="horizontalSpacer_2">
             <property name="orientation">
@@ -104,6 +101,28 @@
              </size>
             </property>
            </spacer>
+          </item>
+          <item row="1" column="1">
+           <widget class="QScrollArea" name="scrollArea_6">
+            <property name="widgetResizable">
+             <bool>true</bool>
+            </property>
+            <widget class="QWidget" name="scrollAreaWidgetContents_4">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>741</width>
+               <height>602</height>
+              </rect>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_14">
+              <item row="0" column="0">
+               <layout class="QGridLayout" name="gridLayout"/>
+              </item>
+             </layout>
+            </widget>
+           </widget>
           </item>
          </layout>
         </item>
@@ -563,8 +582,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>440</width>
-             <height>565</height>
+             <width>370</width>
+             <height>568</height>
             </rect>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -585,8 +604,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>440</width>
-             <height>565</height>
+             <width>370</width>
+             <height>568</height>
             </rect>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -611,8 +630,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>440</width>
-             <height>565</height>
+             <width>370</width>
+             <height>568</height>
             </rect>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -915,7 +934,7 @@
               </property>
               <property name="sizeHint" stdset="0">
                <size>
-                <width>654</width>
+                <width>591</width>
                 <height>20</height>
                </size>
               </property>
@@ -931,7 +950,7 @@
               </property>
               <property name="sizeHint" stdset="0">
                <size>
-                <width>655</width>
+                <width>591</width>
                 <height>20</height>
                </size>
               </property>
@@ -954,10 +973,48 @@
              </spacer>
             </item>
             <item row="0" column="1">
-             <layout class="QGridLayout" name="tLetterGridLayout"/>
+             <widget class="QScrollArea" name="scrollArea_4">
+              <property name="widgetResizable">
+               <bool>true</bool>
+              </property>
+              <widget class="QWidget" name="scrollAreaWidgetContents_5">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>547</width>
+                 <height>513</height>
+                </rect>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_11">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="tLetterGridLayout"/>
+                </item>
+               </layout>
+              </widget>
+             </widget>
             </item>
             <item row="0" column="3">
-             <layout class="QGridLayout" name="rotatedImageGridLayout"/>
+             <widget class="QScrollArea" name="scrollArea_5">
+              <property name="widgetResizable">
+               <bool>true</bool>
+              </property>
+              <widget class="QWidget" name="scrollAreaWidgetContents_6">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>547</width>
+                 <height>513</height>
+                </rect>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_12">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="rotatedImageGridLayout"/>
+                </item>
+               </layout>
+              </widget>
+             </widget>
             </item>
            </layout>
           </item>
@@ -974,7 +1031,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1397</width>
+     <width>1187</width>
      <height>26</height>
     </rect>
    </property>
@@ -989,7 +1046,7 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup"/>
   <buttongroup name="buttonGroup_2"/>
+  <buttongroup name="buttonGroup"/>
  </buttongroups>
 </ui>
