@@ -23,10 +23,16 @@ class Ui(QtWidgets.QMainWindow):
 
         #!?######### Links of GUI Elements to Methods ##########
 
-        self.browseButton.clicked.connect(self.openImage)
-        self.browsePushButton.clicked.connect(self.openImageZoomTab)
         self.zoomPushButton.clicked.connect(self.zoom)
+        self.shearPushButton.clicked.connect(self.shear)
+        self.browseButton.clicked.connect(self.openImage)
+        self.nearestPushButton.clicked.connect(self.rotation)
+        self.bilinearPushButton.clicked.connect(self.rotation)
+        self.shearNegativePushButton.clicked.connect(self.shear)
+        self.browsePushButton.clicked.connect(self.openImageZoomTab)
         self.generateTLetterPushButton.clicked.connect(self.generateTLetter)
+        
+
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
@@ -248,8 +254,8 @@ class Ui(QtWidgets.QMainWindow):
             else:
 
                 #* Calculate new width and height
-                newImageWidth = int(factor * self.oldImageWidth)
-                newImageHeight = int(factor * self.oldImageHeight) 
+                newImageWidth = round(factor * self.oldImageWidth)
+                newImageHeight = round(factor * self.oldImageHeight) 
 
                 #* Make an empty 2D array for the zoomed image 
                 newImageArray = np.empty([newImageHeight, newImageWidth])
@@ -276,14 +282,18 @@ class Ui(QtWidgets.QMainWindow):
             #* Loop on new image by two for loops, outer for rows(height) innner for columns(width)
             for i in range(newImageHeight):
                 for j in range(newImageWidth):
-
+                    
                     #* Get new coordinates the divide coordinate by factor
                     newRowCoordinate = i/factor
                     newColCoordinate = j/factor
 
-                    #* floor result
-                    newRowCoordinateImg = int(np.floor(newRowCoordinate))
-                    newColCoordinateImg = int(np.floor(newColCoordinate))
+                    if newRowCoordinate > self.imageArray.shape[0] - 1  or  newColCoordinate > self.imageArray.shape[1] - 1 :
+                        #* floor result
+                        newRowCoordinateImg = int(np.floor(newRowCoordinate))
+                        newColCoordinateImg = int(np.floor(newColCoordinate))
+                    else:
+                        newRowCoordinateImg = round(newRowCoordinate)
+                        newColCoordinateImg = round(newColCoordinate)
 
                     #* Get the value of the coordinate then insert it in image array
                     newImageArray[i, j] = self.imageArray[newRowCoordinateImg, newColCoordinateImg]
@@ -376,107 +386,171 @@ class Ui(QtWidgets.QMainWindow):
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
-                                                #?######## Task 2 Functions  #########
+                                                #?######## Task 3 Functions  #########
     
+    #! Generate T letter
     def generateTLetter(self):
         width = 128
         height = 128
 
         image = (width, height, 3)
-        array = np.zeros(image, dtype=np.uint8)
+        self.array = np.zeros(image, dtype=np.uint8)
 
         for i in range(28, 48):
             for j in range(28, 98):
-                array[i,j] = [255, 255, 255]
+                self.array[i,j] = [255, 255, 255]
 
         for i in range(48, 98):
             for j in range(53, 73):
-                array[i,j] = [255, 255, 255]
+                self.array[i,j] = [255, 255, 255]
 
-        img = Image.fromarray(array)
+        img = Image.fromarray(self.array)
 
-        self.figure = plt.figure(figsize=(15,5))
-        self.Canvas = FigureCanvas(self.figure)
-        self.tLetterGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+        self.drawCanvas(img, self.tLetterGridLayout)
 
-        plt.imshow(img, cmap='gray')
-        self.Canvas.draw()
-        rotatedImage, new_height, new_width, output = self.rotate(array, 80)
-        # test = self.bilinearInterpolation(array, 128,128,output,new_width,new_height) 
-        # interpolate = Image.fromarray(np.uint8(test))
-        self.figure = plt.figure(figsize=(15,5))
-        self.Canvas = FigureCanvas(self.figure)
-        self.rotatedImageGridLayout.addWidget(self.Canvas,0, 0, 1, 1)
+    #! Rotation Using Nearest
+    def rotation(self):
+        try:
+            self.informationLabel.clear()
+            angle = self.rotateDoubleSpinBox.value()
 
-        plt.imshow(rotatedImage, cmap='gray')
-        self.Canvas.draw()
-    
-    def shear(self, angle,x,y):
-        # shear 1
-        tangent=math.tan(angle/2)
-        new_x=round(x-y*tangent)
-        new_y=y
-        #shear 2
-        new_y=round(new_x*math.sin(angle)+new_y)      #since there is no change in new_x according to the shear matrix
-        #shear 3
-        new_x=round(new_x-new_y*tangent)              #since there is no change in new_y according to the shear matrix
-        return new_y,new_x
+            if angle < 0:
+                self.informationLabel.setText(str(abs(angle)) + str(' in Clockwise Direction.'))
+            elif angle > 0:
+                self.informationLabel.setText(str(abs(angle)) + str(' in Anticlockwise Direction.'))
+            else: 
+                self.informationLabel.setText(str('No Rotation ! '))
 
-    def rotate(self, image,a): 
-    #image : your image
-    #a : angle to rotate your image
-        angle = - ( a )            
-        angle=math.radians(angle)                               
-        cosine=math.cos(angle)
-        sine=math.sin(angle)
-        height=image.shape[0]    
-        width=image.shape[1]                                  
-        # height and width of the new image 
-        new_height  = round(abs(image.shape[0]*cosine)+abs(image.shape[1]*sine))+1
-        new_width  = round(abs(image.shape[1]*cosine)+abs(image.shape[0]*sine))+1
-        #image variable of dimensions of new_height and new _column filled with zeros
-        output=np.zeros((new_height,new_width,image.shape[2]))
-        image_copy=output.copy()
-        #Find the centre of the image about which we have to rotate the image
-        original_centre_height   = round(((image.shape[0]+1)/2)-1)    
-        original_centre_width    = round(((image.shape[1]+1)/2)-1)   
-        # Find the centre of the new image that will be obtained
-        new_centre_height= round(((new_height+1)/2)-1)        
-        new_centre_width= round(((new_width+1)/2)-1)          
+            # Convert angle to radians
+            rad = math.radians(angle)
+            # Create array of zeros for rotated image
+            rotatedImage = np.uint8(np.zeros(self.array.shape))
+            # Width and Height of rotated image
+            height = rotatedImage.shape[0]
+            width = rotatedImage.shape[1]
+            # Get center of the image
+            centerX, centerY = (width//2, height//2)
+            # Loop on rotated image 
+            # Height = Row
+            # Width = Column
+            for i in range(rotatedImage.shape[0]):
+                for j in range(rotatedImage.shape[1]):
+                    
+                    if self.nearestPushButton.isChecked():
+                        # Shift point to fixed point which is center
+                        x = (i-centerX)*math.cos(rad)+(j-centerY)*math.sin(rad)
+                        y = -(i-centerX)*math.sin(rad)+(j-centerY)*math.cos(rad)
+                        # Nearest interpolation
+                        if x > rotatedImage.shape[0] - 1  or  y > rotatedImage.shape[1] - 1 :
+                            interpolateX = int(np.floor(x)) 
+                            interpolateY = int(np.floor(y))
+                        else:
+                            interpolateX = round(x)
+                            interpolateY = round(y)
+                        
+                        x = interpolateX + centerX
+                        y = interpolateY + centerY
 
-        for i in range(height):
-            for j in range(width):
-                #co-ordinates of pixel with respect to the centre of original image
-                y=image.shape[0]-1-i-original_centre_height                   
-                x=image.shape[1]-1-j-original_centre_width 
-                '''
-                #co-ordinate of pixel with respect to the rotated image
-            
-                new_y=round(-x*sine+y*cosine)
-                new_x=round(x*cosine+y*sine)
-                '''
+                        if (x>=0 and y>=0 and x<self.array.shape[0] and  y<self.array.shape[1]):
+                            rotatedImage[i, j] = self.array[x, y]
+
+                    elif self.bilinearPushButton.isChecked():
+                        x = ((i-centerX)*math.cos(rad)+(j-centerY)*math.sin(rad)) + centerX
+                        y = (-(i-centerX)*math.sin(rad)+(j-centerY)*math.cos(rad)) + centerY
+
+                        # Bi-linear interpolation
+                        coordinateXFloor = math.floor(x) 
+                        coordinateYFloor = math.floor(y) 
+
+                        coordinateXCeil = min(height - 1, math.ceil(x)) 
+                        coordinateYCeil = min(width - 1, math.ceil(y)) 
+                        
+                        if (coordinateXFloor>=0 and coordinateYFloor>=0 and coordinateXFloor<self.array.shape[0] and  coordinateYFloor<self.array.shape[1]):
+                            firstPoint = self.array[coordinateXFloor, coordinateYFloor]
+                        if (coordinateXCeil>=0 and coordinateYFloor>=0 and coordinateXCeil<self.array.shape[0] and  coordinateYFloor<self.array.shape[1]):
+                            secondPoint = self.array[coordinateXCeil, coordinateYFloor]
+                        if (coordinateXFloor>=0 and coordinateYCeil>=0 and coordinateXFloor<self.array.shape[0] and  coordinateYCeil<self.array.shape[1]):
+                            thirdPoint = self.array[coordinateXFloor, coordinateYCeil]
+                        if (coordinateXCeil>=0 and coordinateYCeil>=0 and coordinateXCeil<self.array.shape[0] and  coordinateYCeil<self.array.shape[1]):
+                            fourthPoint = self.array[coordinateXCeil, coordinateYCeil]
+
+                        #* Check for some cases
+                        if (x>=0 and coordinateXCeil>=0 and coordinateXFloor>=0 and y>=0 and coordinateYCeil>=0 and coordinateYFloor>=0 and coordinateXCeil<self.array.shape[0] and coordinateXFloor<self.array.shape[0] and x<self.array.shape[0] and coordinateYCeil<self.array.shape[1] and coordinateYFloor<self.array.shape[1] and y<self.array.shape[1]):
+                            if (coordinateXCeil == coordinateXFloor) and (coordinateYCeil == coordinateYFloor):
+                                rotatedImage[i,j] = self.array[int(x), int(y)]
+                            
+                            elif (coordinateXCeil == coordinateXFloor):
+                                firstPixelValue = self.array[int(x), int(coordinateYFloor)]
+                                secondPixelValue = self.array[int(x), int(coordinateYCeil)]
+                                rotatedImage[i,j] = firstPixelValue * (coordinateYCeil - y) + secondPixelValue * (y - coordinateYFloor)
+                        
+                            elif (coordinateYCeil == coordinateYFloor):
+                                firstPixelValue = self.array[int(coordinateXFloor), int(y)]
+                                secondPixelValue = self.array[int(coordinateXCeil), int(y)]
+                                rotatedImage[i,j] = (firstPixelValue * (coordinateXCeil - x)) + (secondPixelValue * (x - coordinateXFloor))
+
+                            else:
+                                firstPixelValue = firstPoint * (coordinateXCeil - x) + secondPoint * (x - coordinateXFloor)
+                                secondPixelValue = thirdPoint * (coordinateXCeil - x) + fourthPoint * (x - coordinateXFloor)
+                                rotatedImage[i,j] = firstPixelValue * (coordinateYCeil - y) + secondPixelValue * (y - coordinateYFloor)
                 
-                new_y,new_x = self.shear(angle,x,y)
-                new_y=new_centre_height-new_y
-                new_x=new_centre_width-new_x
-            
-                if 0 <= new_x < new_width and 0 <= new_y < new_height and new_x>=0 and new_y>=0:
+            # return rotatedImage    
+            rotatedImage = Image.fromarray(rotatedImage)
 
-                    output[new_y,new_x,:]=image[i,j,:] 
-        pil_img=Image.fromarray((output).astype(np.uint8))      
-
-        pil_img.save("rotated_image.png")    
-        img=cv.imread("rotated_image.png")
-        img_2=cv.imread("img.jpg")
-
-        # plt.imshow(img, cmap='gray')
-        # plt.imshow(img, cmap='gray')
-        # cv.imshow("Befor Rotate",img_2)
-        # cv.imshow("After Rotate",img)
-        cv.waitKey(0)
-        return img, new_height, new_width, output
-          
+            self.drawCanvas(rotatedImage, self.rotatedImageGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
     
+    #! Shear in x direction
+    def shear(self):
+        try:
+            self.informationLabel.clear()
+            shearImage = np.uint8(np.zeros(self.array.shape))
+            # Width and Height of rotated image
+            height = shearImage.shape[0]
+            width = shearImage.shape[1]
+            # Get center of the image
+            centerX, centerY = (width//2, height//2)
+            # Loop on rotated image 
+            # Height = Row
+            # Width = Column
+            for i in range(shearImage.shape[0]):
+                for j in range(shearImage.shape[1]):
+                    # Shift point to fixed point which is center
+                    newX = i - centerX
+                    newY = j - centerY
+
+                    newX = newX
+
+                    if self.shearPushButton.isChecked():
+                        newY = newX + newY
+                        self.informationLabel.setText(str(' Horizontal Shear 45 Degrees '))
+
+                    elif self.shearNegativePushButton.isChecked():
+                        newY = -newX + newY
+                        self.informationLabel.setText(str(' Horizontal Shear -45 Degrees '))
+
+                    
+                    # Nearest interpolation
+                    if newX > shearImage.shape[0] - 1  or  newY > shearImage.shape[1] - 1 :
+                        interpolateX = int(np.floor(newX)) 
+                        interpolateY = int(np.floor(newY))
+                    else:
+                        interpolateX = round(newX)
+                        interpolateY = round(newY)
+                    
+                    newX = interpolateX + centerX
+                    newY = interpolateY + centerY
+
+                    if (newX>=0 and newY>=0 and newX<self.array.shape[0] and  newY<self.array.shape[1]):
+                        shearImage[i, j] = self.array[newX, newY]
+            
+            # return rotatedImage    
+            shearImage = Image.fromarray(shearImage)
+
+            self.drawCanvas(shearImage, self.rotatedImageGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
@@ -550,6 +624,15 @@ class Ui(QtWidgets.QMainWindow):
         msg.setWindowTitle("Error")
         msg.exec_()
 
+    #! Draw a Canvas then display an image on it
+    def drawCanvas(self, image, layout):
+
+        self.figure = plt.figure(figsize=(15,5))
+        self.Canvas = FigureCanvas(self.figure)
+        layout.addWidget(self.Canvas,0, 0, 1, 1)
+
+        plt.imshow(image, cmap='gray')
+        self.Canvas.draw()
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
 app = QtWidgets.QApplication(sys.argv)
