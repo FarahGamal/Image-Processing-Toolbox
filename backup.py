@@ -30,7 +30,7 @@ class Ui(QtWidgets.QMainWindow):
         self.bilinearPushButton.clicked.connect(self.rotation)
         self.shearNegativePushButton.clicked.connect(self.shear)
         self.browsePushButton.clicked.connect(self.openImageZoomTab)
-        self.equalizePushButton.clicked.connect(lambda: self.equalizeHistogram(self.gr_img, self.histogram, self.max_depth+1))
+        self.equalizePushButton.clicked.connect(lambda: self.equalizeHistogram(self.gr_img, self.histogram, 256))
         self.generateTLetterPushButton.clicked.connect(self.generateTLetter)
         
 
@@ -601,86 +601,70 @@ class Ui(QtWidgets.QMainWindow):
 
         #* Get image path
         fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images', "Image files (*.jpg *.jpeg *.bmp *.dcm)")
-        self.imagePath = fileName[0]
-        if (pathlib.Path(self.imagePath).suffix == ".jpg") or (pathlib.Path(self.imagePath).suffix == ".bmp") or (pathlib.Path(self.imagePath).suffix == ".jpeg"):
-            image = Image.open(self.imagePath)
-            imageShape = np.array(image)
-            #* Check if the image grey scale or not 
-            if imageShape.ndim == 2 and image.mode == 'L':
-                self.gr_img = imageShape
-                max = np.amax(self.gr_img)
-                depth = math.ceil(math.log((int(max) + 1), 2))
-                self.max_depth = 2 ** depth
-                self.drawCanvas(self.gr_img, self.OriginalgridLayout)
-            else:
-                #* Convert to grey scale
-                img = mpimg.imread(self.imagePath)
-                R, G, B = img[:, :, 0], img[:, :, 1], img[:, :, 2]
-                self.gr_img = 0.2989 * R + 0.587 * G + 0.114 * B
-                max = np.amax(self.gr_img)
-                depth = math.ceil(math.log((int(max) + 1), 2))
-                self.max_depth = 2 ** depth
-                self.drawCanvas(self.gr_img, self.OriginalgridLayout)
+        imagePath = fileName[0]
 
-            self.histogram = self.normalizedHistogram(self.gr_img, self.normalizedGridLayout)
-        elif pathlib.Path(self.imagePath).suffix == ".dcm":
-            #* Read DICOM image    
-            image = dicom.dcmread(self.imagePath)
+        image = Image.open(imagePath)
+        imageShape = np.array(image)
 
-            #* Convert image 2D array
-            self.gr_img = image.pixel_array.astype(int)
-            self.gr_img = (np.maximum(self.gr_img, 0) / self.gr_img.max()) * 255.0
-            self.gr_img = np.uint8(self.gr_img)
-            print(self.gr_img)
-            max = np.amax(self.gr_img)
-            depth = math.ceil(math.log((int(max) + 1), 2))
-            self.max_depth = 2 ** depth
+        self.image1D = imageShape.reshape(-1)
+        self.drawCanvas(image, self.OriginalgridLayout)
 
-            self.drawCanvas(image.pixel_array, self.OriginalgridLayout)
-            self.histogram = self.normalizedHistogram(self.gr_img, self.normalizedGridLayout)
+        if len(imageShape.shape) == 3: # img is colorful, so we convert it to grayscale
+            self.gr_img = np.mean(imageShape, axis=-1)
+        else:
+            self.gr_img = imageShape
 
+        # gr_hist = np.zeros([256])
 
+        # for x_pixel in range(gr_img.shape[0]):
+        #     for y_pixel in range(gr_img.shape[1]):
+        #         pixel_value = int(gr_img[x_pixel, y_pixel])
+        #         gr_hist[pixel_value] += 1
+                
+        # '''normalizing the Histogram'''
+        # gr_hist /= (gr_img.shape[0] * gr_img.shape[1])
+        # self.drawHistogram(self.normalizedGridLayout, np.arange(len(gr_hist)), gr_hist)
+        # self.histogram()
+        self.histogram = self.normalizedHistogram(self.gr_img, self.normalizedGridLayout)
+
+        # self.equalizeHistogram(self.gr_img, self.histogram, 256)
 
     def normalizedHistogram(self, image, layout):
-        # if (pathlib.Path(self.imagePath).suffix == ".jpg") or (pathlib.Path(self.imagePath).suffix == ".bmp") or (pathlib.Path(self.imagePath).suffix == ".jpeg"):
-            histo = np.zeros(self.max_depth+1)
+        histo = np.zeros([256])
 
-            for i in range(image.shape[0]):
-                for j in range(image.shape[1]):
-                    histo[int(image[i, j])] += 1
-                    
-            histo /= (image.shape[0] * image.shape[1])
-            self.drawHistogram(layout, np.arange(len(histo)), histo)
-            print(np.arange(self.max_depth))
-            return histo
-        # elif pathlib.Path(self.imagePath).suffix == ".dcm":
-        #     histo = np.zeros(self.max_depth+1)
-
-        #     for i in range(image.shape[0]):
-        #         for j in range(image.shape[1]):
-        #             histo[int(image[i, j])] += 1
-                    
-        #     histo /= (image.shape[0] * image.shape[1])
-        #     self.drawHistogram(layout, np.arange(len(histo)), histo)
-        #     return histo
+        for i in range(image.shape[0]):
+            for j in range(image.shape[1]):
+                histo[int(image[i, j])] += 1
+                
+        histo /= (image.shape[0] * image.shape[1])
+        self.drawHistogram(layout, np.arange(len(histo)), histo)
+        return histo
      
     def equalizeHistogram(self, img, histo, L):
-        # if (pathlib.Path(self.imagePath).suffix == ".jpg") or (pathlib.Path(self.imagePath).suffix == ".bmp") or (pathlib.Path(self.imagePath).suffix == ".jpeg"):
-            eq_histo = np.zeros_like(histo)
-            en_img = np.zeros_like(img)
+        eq_histo = np.zeros_like(histo)
+        en_img = np.zeros_like(img)
+        # eq_hist = np.zeros_like(histo)
 
-            for i in range(len(histo)):
-                eq_histo[i] = round((L - 1) * np.sum(histo[0:i]))
+        for i in range(len(histo)):
+            eq_histo[i] = round((L - 1) * np.sum(histo[0:i]))
 
-            for i in range(img.shape[0]):
-                for j in range(img.shape[1]):
-                    pixel_val = int(img[i, j])
-                    en_img[i, j] = eq_histo[pixel_val]
-
-            histogm = self.normalizedHistogram(en_img, self.equalizedHistoGridLayout)
-            self.drawCanvas(en_img, self.equalizedImageGridLayout)
-        # elif pathlib.Path(imagePath).suffix == ".dcm":
-            
+        # self.drawHistogram(self.equalizedHistoGridLayout, np.arange(len(eq_histo)), eq_histo)
+        '''enhance image as well:'''
+        for x_pixel in range(img.shape[0]):
+            for y_pixel in range(img.shape[1]):
+                pixel_val = int(img[x_pixel, y_pixel])
+                en_img[x_pixel, y_pixel] = eq_histo[pixel_val]
+        histogm = self.normalizedHistogram(en_img, self.equalizedHistoGridLayout)
+        # for x_pixel in range(en_img.shape[0]):
+        #     for y_pixel in range(en_img.shape[1]):
+        #         pixel_value = int(en_img[x_pixel, y_pixel])
+        #         eq_hist[pixel_value] += 1
+                
+        # '''normalizing the Histogram'''
+        # eq_hist /= (en_img.shape[0] * en_img.shape[1])
+        # self.drawHistogram(self.equalizedHistoGridLayout, np.arange(len(eq_hist)), eq_hist)
+        self.drawCanvas(en_img, self.equalizedImageGridLayout)
+         
         
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
