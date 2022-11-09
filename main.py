@@ -28,9 +28,9 @@ class Ui(QtWidgets.QMainWindow):
         self.browseButton.clicked.connect(self.openImage)
         self.nearestPushButton.clicked.connect(self.rotation)
         self.bilinearPushButton.clicked.connect(self.rotation)
+        self.equalizePushButton.clicked.connect(self.equalize)
         self.shearNegativePushButton.clicked.connect(self.shear)
         self.browsePushButton.clicked.connect(self.openImageZoomTab)
-        self.equalizePushButton.clicked.connect(lambda: self.equalizeHistogram(self.gr_img, self.histogram, self.max_depth+1))
         self.generateTLetterPushButton.clicked.connect(self.generateTLetter)
         
 
@@ -690,7 +690,12 @@ class Ui(QtWidgets.QMainWindow):
             self.drawCanvas(equalizedImage, self.equalizedImageGridLayout)
         except:
             self.ShowPopUpMessage("An ERROR OCCURED!!")
-            
+
+    def equalize(self):
+        try:
+            self.equalizeHistogram(self.gr_img, self.histogram, self.max_depth+1)
+        except:
+            self.ShowPopUpMessage("Please, Choose an image to equalize!!")         
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
                                                 #?######## Helper Functions #########
