@@ -596,6 +596,7 @@ class Ui(QtWidgets.QMainWindow):
     #! Browse image and show the image and its normalized histogram
     def browse(self):
         try:
+            self.gr_img, self.histogram = [], []
             #* Clear canvas before draw
             self.clearCanvas(self.OriginalgridLayout)
             self.clearCanvas(self.normalizedGridLayout)
