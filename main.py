@@ -592,96 +592,105 @@ class Ui(QtWidgets.QMainWindow):
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
                                                 #?######## Task 4 Functions  #########
- 
+    
+    #! Browse image and show the image and its normalized histogram
     def browse(self):
-        self.clearCanvas(self.OriginalgridLayout)
-        self.clearCanvas(self.normalizedGridLayout)
-        self.clearCanvas(self.equalizedHistoGridLayout)
-        self.clearCanvas(self.equalizedImageGridLayout)
+        try:
+            #* Clear canvas before draw
+            self.clearCanvas(self.OriginalgridLayout)
+            self.clearCanvas(self.normalizedGridLayout)
+            self.clearCanvas(self.equalizedHistoGridLayout)
+            self.clearCanvas(self.equalizedImageGridLayout)
 
-        #* Get image path
-        fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images', "Image files (*.jpg *.jpeg *.bmp *.dcm)")
-        self.imagePath = fileName[0]
-        if (pathlib.Path(self.imagePath).suffix == ".jpg") or (pathlib.Path(self.imagePath).suffix == ".bmp") or (pathlib.Path(self.imagePath).suffix == ".jpeg"):
-            image = Image.open(self.imagePath)
-            imageShape = np.array(image)
-            #* Check if the image grey scale or not 
-            if imageShape.ndim == 2 and image.mode == 'L':
-                self.gr_img = imageShape
+            #* Get image path
+            fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images', "Image files (*.jpg *.jpeg *.bmp *.dcm)")
+            self.imagePath = fileName[0]
+            
+            #* Check image format
+            if (pathlib.Path(self.imagePath).suffix == ".jpg") or (pathlib.Path(self.imagePath).suffix == ".bmp") or (pathlib.Path(self.imagePath).suffix == ".jpeg"):
+                #* open image and convert it to array
+                image = Image.open(self.imagePath)
+                imageShape = np.array(image)
+                #* Check if the image grey scale or not 
+                if imageShape.ndim == 2 and image.mode == 'L':
+                    self.gr_img = imageShape
+                    #* Calculate maximum value of pixels
+                    max = np.amax(self.gr_img)
+                    depth = math.ceil(math.log((int(max) + 1), 2))
+                    self.max_depth = 2 ** depth
+                    #* Draw original image
+                    self.drawCanvas(self.gr_img, self.OriginalgridLayout)
+                else:
+                    #* Convert to grey scale
+                    img = mpimg.imread(self.imagePath)
+                    R, G, B = img[:, :, 0], img[:, :, 1], img[:, :, 2]
+                    self.gr_img = 0.2989 * R + 0.587 * G + 0.114 * B
+                    #* Calculate maximum value of pixels
+                    max = np.amax(self.gr_img)
+                    depth = math.ceil(math.log((int(max) + 1), 2))
+                    self.max_depth = 2 ** depth
+                    #* Draw original image
+                    self.drawCanvas(self.gr_img, self.OriginalgridLayout)
+                #* Call normalized histogram function to calculate and display it
+                self.histogram = self.normalizedHistogram(self.gr_img, self.normalizedGridLayout)
+            elif pathlib.Path(self.imagePath).suffix == ".dcm":
+                #* Read DICOM image    
+                image = dicom.dcmread(self.imagePath)
+                #* Convert image 2D array
+                self.gr_img = image.pixel_array.astype(int)
+                self.gr_img = (np.maximum(self.gr_img, 0) / self.gr_img.max()) * 255.0
+                self.gr_img = np.uint8(self.gr_img)
+                #* Calculate maximum value of pixels
                 max = np.amax(self.gr_img)
                 depth = math.ceil(math.log((int(max) + 1), 2))
                 self.max_depth = 2 ** depth
-                self.drawCanvas(self.gr_img, self.OriginalgridLayout)
-            else:
-                #* Convert to grey scale
-                img = mpimg.imread(self.imagePath)
-                R, G, B = img[:, :, 0], img[:, :, 1], img[:, :, 2]
-                self.gr_img = 0.2989 * R + 0.587 * G + 0.114 * B
-                max = np.amax(self.gr_img)
-                depth = math.ceil(math.log((int(max) + 1), 2))
-                self.max_depth = 2 ** depth
-                self.drawCanvas(self.gr_img, self.OriginalgridLayout)
+                #* Draw original image
+                self.drawCanvas(image.pixel_array, self.OriginalgridLayout)
+                #* Call normalized histogram function to calculate and display it
+                self.histogram = self.normalizedHistogram(self.gr_img, self.normalizedGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
 
-            self.histogram = self.normalizedHistogram(self.gr_img, self.normalizedGridLayout)
-        elif pathlib.Path(self.imagePath).suffix == ".dcm":
-            #* Read DICOM image    
-            image = dicom.dcmread(self.imagePath)
-
-            #* Convert image 2D array
-            self.gr_img = image.pixel_array.astype(int)
-            self.gr_img = (np.maximum(self.gr_img, 0) / self.gr_img.max()) * 255.0
-            self.gr_img = np.uint8(self.gr_img)
-            print(self.gr_img)
-            max = np.amax(self.gr_img)
-            depth = math.ceil(math.log((int(max) + 1), 2))
-            self.max_depth = 2 ** depth
-
-            self.drawCanvas(image.pixel_array, self.OriginalgridLayout)
-            self.histogram = self.normalizedHistogram(self.gr_img, self.normalizedGridLayout)
-
-
-
+    #! Calculate Normalized histogram and show it
     def normalizedHistogram(self, image, layout):
-        # if (pathlib.Path(self.imagePath).suffix == ".jpg") or (pathlib.Path(self.imagePath).suffix == ".bmp") or (pathlib.Path(self.imagePath).suffix == ".jpeg"):
+        try:
+            #* Create array of zeros
             histo = np.zeros(self.max_depth+1)
-
+            #* Loop on 2d array of the image to calculate frequancey of pixel values
             for i in range(image.shape[0]):
                 for j in range(image.shape[1]):
                     histo[int(image[i, j])] += 1
-                    
+            #* Make the array normalized by dividing by size        
             histo /= (image.shape[0] * image.shape[1])
+            #* Call histogram function to draw it
             self.drawHistogram(layout, np.arange(len(histo)), histo)
-            print(np.arange(self.max_depth))
+            #* Return array of histogram
             return histo
-        # elif pathlib.Path(self.imagePath).suffix == ".dcm":
-        #     histo = np.zeros(self.max_depth+1)
-
-        #     for i in range(image.shape[0]):
-        #         for j in range(image.shape[1]):
-        #             histo[int(image[i, j])] += 1
-                    
-        #     histo /= (image.shape[0] * image.shape[1])
-        #     self.drawHistogram(layout, np.arange(len(histo)), histo)
-        #     return histo
-     
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
+    
+    #! Calculate equalized image and its histogram
     def equalizeHistogram(self, img, histo, L):
-        # if (pathlib.Path(self.imagePath).suffix == ".jpg") or (pathlib.Path(self.imagePath).suffix == ".bmp") or (pathlib.Path(self.imagePath).suffix == ".jpeg"):
-            eq_histo = np.zeros_like(histo)
-            en_img = np.zeros_like(img)
+        try:
+            #* Create an array for equalized histogram and image
+            equalizedHistogram = np.zeros_like(histo)
+            equalizedImage = np.zeros_like(img)
 
+            #* For loop to calculate cdf and sk
             for i in range(len(histo)):
-                eq_histo[i] = round((L - 1) * np.sum(histo[0:i]))
-
+                equalizedHistogram[i] = round((L - 1) * np.sum(histo[0:i]))
+            #* Get equalized image
             for i in range(img.shape[0]):
                 for j in range(img.shape[1]):
                     pixel_val = int(img[i, j])
-                    en_img[i, j] = eq_histo[pixel_val]
-
-            histogm = self.normalizedHistogram(en_img, self.equalizedHistoGridLayout)
-            self.drawCanvas(en_img, self.equalizedImageGridLayout)
-        # elif pathlib.Path(imagePath).suffix == ".dcm":
+                    equalizedImage[i, j] = equalizedHistogram[pixel_val]
+            #* Get and draw equalized histogram
+            histogm = self.normalizedHistogram(equalizedImage, self.equalizedHistoGridLayout)
+            #* Draw equalized image
+            self.drawCanvas(equalizedImage, self.equalizedImageGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
             
-        
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
                                                 #?######## Helper Functions #########
@@ -741,6 +750,18 @@ class Ui(QtWidgets.QMainWindow):
         #* Set text of label with width and height
         label.setText(str(width) + str(' x ') + str(height))
                                                
+                                                #?######## Task 4 Helper Functions  #########
+ #! Draw Histogram
+    def drawHistogram(self, layout, x, y):
+        #* Create a canvas
+        self.figure = plt.figure(figsize=(15,5))
+        self.Canvas = FigureCanvas(self.figure)
+        layout.addWidget(self.Canvas,0, 0, 1, 1)
+
+        plt.bar(x, y)
+        plt.ylabel('Number of Pixels')
+        plt.xlabel('Pixel Value')
+        self.Canvas.draw()                                              
 
                                                 #?######## General Helper Functions  #########
 
@@ -762,18 +783,9 @@ class Ui(QtWidgets.QMainWindow):
         layout.addWidget(self.Canvas,0, 0, 1, 1)
 
         plt.imshow(image, cmap='gray')
-        self.Canvas.draw()
+        self.Canvas.draw() 
 
-    def drawHistogram(self, layout, x, y):
-        self.figure = plt.figure(figsize=(15,5))
-        self.Canvas = FigureCanvas(self.figure)
-        layout.addWidget(self.Canvas,0, 0, 1, 1)
-
-        plt.bar(x, y)
-        plt.ylabel('Number of Pixels')
-        plt.xlabel('Pixel Value')
-        self.Canvas.draw()
-
+    #! Clear Canvas
     def clearCanvas(self, layout):
         self.figure = plt.figure(figsize=(15,5))
         self.Canvas = FigureCanvas(self.figure)
