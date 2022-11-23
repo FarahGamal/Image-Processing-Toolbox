@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1288</width>
-    <height>887</height>
+    <width>1270</width>
+    <height>811</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,7 +21,7 @@
        <string notr="true">background-color: rgb(26, 30, 35);</string>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="imageViewerTab">
        <attribute name="title">
@@ -112,8 +112,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>842</width>
-               <height>675</height>
+               <width>824</width>
+               <height>599</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout_14">
@@ -582,8 +582,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>404</width>
-             <height>641</height>
+             <width>398</width>
+             <height>565</height>
             </rect>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -604,8 +604,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>403</width>
-             <height>641</height>
+             <width>397</width>
+             <height>565</height>
             </rect>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -630,8 +630,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>404</width>
-             <height>641</height>
+             <width>398</width>
+             <height>565</height>
             </rect>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -982,8 +982,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>598</width>
-                 <height>586</height>
+                 <width>589</width>
+                 <height>510</height>
                 </rect>
                </property>
                <layout class="QGridLayout" name="gridLayout_11">
@@ -1004,8 +1004,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>598</width>
-                 <height>586</height>
+                 <width>589</width>
+                 <height>510</height>
                 </rect>
                </property>
                <layout class="QGridLayout" name="gridLayout_12">
@@ -1037,8 +1037,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>607</width>
-             <height>330</height>
+             <width>598</width>
+             <height>292</height>
             </rect>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -1059,8 +1059,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>606</width>
-             <height>330</height>
+             <width>597</width>
+             <height>292</height>
             </rect>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -1118,8 +1118,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>607</width>
-             <height>329</height>
+             <width>598</width>
+             <height>291</height>
             </rect>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_6">
@@ -1180,8 +1180,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>606</width>
-             <height>329</height>
+             <width>597</width>
+             <height>291</height>
             </rect>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -1234,6 +1234,283 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_3">
+       <attribute name="title">
+        <string>Filtering</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_20">
+        <item row="0" column="0">
+         <layout class="QGridLayout" name="gridLayout_16">
+          <item row="0" column="0">
+           <layout class="QGridLayout" name="gridLayout_29">
+            <item row="1" column="0">
+             <widget class="QPushButton" name="filteringPushButton">
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(83, 194, 191);</string>
+              </property>
+              <property name="text">
+               <string>Browse</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="4">
+             <spacer name="horizontalSpacer_13">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>500</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSpinBox" name="kernelSizeSpinBox">
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="singleStep">
+               <number>2</number>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QSpinBox" name="kFactorSpinBox">
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_11">
+              <property name="font">
+               <font>
+                <pointsize>9</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="text">
+               <string>Kernel Size</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLabel" name="label_12">
+              <property name="font">
+               <font>
+                <pointsize>9</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="text">
+               <string>K Factor </string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QPushButton" name="filterPushButton">
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(83, 194, 191);</string>
+              </property>
+              <property name="text">
+               <string>Filter</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="0">
+           <layout class="QGridLayout" name="gridLayout_15">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_13">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="text">
+               <string>Original Image</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_14">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="text">
+               <string>Filtered Image</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QScrollArea" name="scrollArea_11">
+              <property name="widgetResizable">
+               <bool>true</bool>
+              </property>
+              <widget class="QWidget" name="scrollAreaWidgetContents_11">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>603</width>
+                 <height>277</height>
+                </rect>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_17">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="originalFGridLayout"/>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QScrollArea" name="scrollArea_12">
+              <property name="widgetResizable">
+               <bool>true</bool>
+              </property>
+              <widget class="QWidget" name="scrollAreaWidgetContents_12">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>602</width>
+                 <height>277</height>
+                </rect>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_23">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="filterGridLayout"/>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_15">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="text">
+               <string>Salt and Papper Noise</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="label_16">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="text">
+               <string>Denoised Image</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QScrollArea" name="scrollArea_13">
+              <property name="widgetResizable">
+               <bool>true</bool>
+              </property>
+              <widget class="QWidget" name="scrollAreaWidgetContents_13">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>603</width>
+                 <height>277</height>
+                </rect>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_25">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="saltAndPapperGridLayout"/>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QScrollArea" name="scrollArea_14">
+              <property name="widgetResizable">
+               <bool>true</bool>
+              </property>
+              <widget class="QWidget" name="scrollAreaWidgetContents_14">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>602</width>
+                 <height>277</height>
+                </rect>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_27">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="denoisedImageGridLayout"/>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -1243,7 +1520,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1288</width>
+     <width>1270</width>
      <height>26</height>
     </rect>
    </property>
@@ -1258,7 +1535,7 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup"/>
   <buttongroup name="buttonGroup_2"/>
+  <buttongroup name="buttonGroup"/>
  </buttongroups>
 </ui>

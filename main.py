@@ -26,13 +26,14 @@ class Ui(QtWidgets.QMainWindow):
         self.zoomPushButton.clicked.connect(self.zoom)
         self.shearPushButton.clicked.connect(self.shear)
         self.browseButton.clicked.connect(self.openImage)
+        self.filterPushButton.clicked.connect(self.filter)
         self.nearestPushButton.clicked.connect(self.rotation)
         self.bilinearPushButton.clicked.connect(self.rotation)
         self.equalizePushButton.clicked.connect(self.equalize)
         self.shearNegativePushButton.clicked.connect(self.shear)
+        self.filteringPushButton.clicked.connect(self.browseFilter)
         self.browsePushButton.clicked.connect(self.openImageZoomTab)
         self.generateTLetterPushButton.clicked.connect(self.generateTLetter)
-        
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
@@ -696,7 +697,82 @@ class Ui(QtWidgets.QMainWindow):
         try:
             self.equalizeHistogram(self.gr_img, self.histogram, self.max_depth+1)
         except:
-            self.ShowPopUpMessage("Please, Choose an image to equalize!!")         
+            self.ShowPopUpMessage("Please, Choose an image to equalize!!")    
+
+#?-----------------------------------------------------------------------------------------------------------------------------#
+
+                                                #?######## Task 5 Functions  #########
+
+    #! Browse and convert image to grey scale
+    def browseFilter(self):
+        try:
+
+            self.clearCanvas(self.originalFGridLayout)
+            self.clearCanvas(self.filterGridLayout)
+            self.clearCanvas(self.saltAndPapperGridLayout)
+            self.clearCanvas(self.denoisedImageGridLayout)
+            #* Get image path
+            fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images', "Image files (*.jpg *.jpeg *.bmp *.dcm)")
+            imagePath = fileName[0]
+            
+            #* Check image format
+            if (pathlib.Path(imagePath).suffix == ".jpg") or (pathlib.Path(imagePath).suffix == ".bmp") or (pathlib.Path(imagePath).suffix == ".jpeg"):
+                #* open image and convert it to array
+                self.openOriginalImage = Image.open(imagePath)
+                imageShape = np.array(self.openOriginalImage)
+                #* Check if the image grey scale or not 
+                if imageShape.ndim == 2 and self.openOriginalImage.mode == 'L':
+                    self.originalGreyImage = imageShape
+                    #* Draw original image
+                    self.drawCanvas(self.originalGreyImage, self.originalFGridLayout)
+                else:
+                    #* Convert to grey scale
+                    self.originalGreyImage = np.array(Image.open(imagePath).convert('L'))
+                    #* Draw original image
+                    self.drawCanvas(self.originalGreyImage, self.originalFGridLayout)
+            elif pathlib.Path(imagePath).suffix == ".dcm":
+                    #* Read DICOM image    
+                    image = dicom.dcmread(imagePath)
+                    #* Convert image 2D array
+                    self.originalGreyImage = image.pixel_array.astype(int)
+                    self.originalGreyImage = (np.maximum(self.originalGreyImage, 0) / self.originalGreyImage.max()) * 255.0
+                    self.originalGreyImage = np.uint8(self.originalGreyImage)
+                    #* Draw original image
+                    self.drawCanvas(image.pixel_array, self.originalFGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
+
+    #! Filter 
+    def filter(self):
+
+        kernelSize = self.kernelSizeSpinBox.value()
+        kFactor = self.kFactorSpinBox.value()
+
+        kernelMatrix = np.full((kernelSize, kernelSize), 1/(kernelSize * kernelSize))
+
+        originalWidth = self.openOriginalImage.width
+        originalHeight = self.openOriginalImage.height
+        originalImage = self.originalGreyImage
+
+        imageNewWidthWithPadding = originalWidth + kernelSize - 1
+        imageNewHeightWithPadding = originalHeight + kernelSize - 1
+
+        originalImageWithZeroPadding = np.pad(originalImage, kernelSize//2)
+        filteredImage = np.zeros((imageNewHeightWithPadding, imageNewWidthWithPadding))
+        
+        for i in range(originalHeight):
+            for j in range(originalWidth):
+                result = 0
+                for m in range(kernelSize):
+                    for n in range(kernelSize):
+                        result += originalImageWithZeroPadding[m + i, n + j] * kernelMatrix[m, n]
+                filteredImage[i + kernelSize//2, j + kernelSize//2] = result
+
+        subtractBlurredImage = originalImageWithZeroPadding - filteredImage
+        multiplyByKFactor = subtractBlurredImage * kFactor
+        enhancedImage = multiplyByKFactor + originalImageWithZeroPadding
+        self.drawCanvas(enhancedImage, self.filterGridLayout)
+
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
                                                 #?######## Helper Functions #########
