@@ -1,5 +1,7 @@
 ########## Imports ##########
 
+
+import random
 import numpy as np
 from PIL import Image
 import pydicom as dicom
@@ -31,8 +33,10 @@ class Ui(QtWidgets.QMainWindow):
         self.bilinearPushButton.clicked.connect(self.rotation)
         self.equalizePushButton.clicked.connect(self.equalize)
         self.shearNegativePushButton.clicked.connect(self.shear)
+        self.denoisePushButton.clicked.connect(self.medianFilter)
         self.filteringPushButton.clicked.connect(self.browseFilter)
         self.browsePushButton.clicked.connect(self.openImageZoomTab)
+        self.addNoisePushButton.clicked.connect(self.addSaltAndPepperNoise)
         self.generateTLetterPushButton.clicked.connect(self.generateTLetter)
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
@@ -713,12 +717,14 @@ class Ui(QtWidgets.QMainWindow):
             self.clearCanvas(self.denoisedImageGridLayout)
             #* Get image path
             fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images', "Image files (*.jpg *.jpeg *.bmp *.dcm)")
-            imagePath = fileName[0]
+            self.Path = fileName[0]
             
             #* Check image format
-            if (pathlib.Path(imagePath).suffix == ".jpg") or (pathlib.Path(imagePath).suffix == ".bmp") or (pathlib.Path(imagePath).suffix == ".jpeg"):
+            if (pathlib.Path(self.Path).suffix == ".jpg") or (pathlib.Path(self.Path).suffix == ".bmp") or (pathlib.Path(self.Path).suffix == ".jpeg"):
                 #* open image and convert it to array
-                self.openOriginalImage = Image.open(imagePath)
+                self.openOriginalImage = Image.open(self.Path)
+                self.originalWidth = self.openOriginalImage.width
+                self.originalHeight = self.openOriginalImage.height
                 imageShape = np.array(self.openOriginalImage)
                 #* Check if the image grey scale or not 
                 if imageShape.ndim == 2 and self.openOriginalImage.mode == 'L':
@@ -727,51 +733,153 @@ class Ui(QtWidgets.QMainWindow):
                     self.drawCanvas(self.originalGreyImage, self.originalFGridLayout)
                 else:
                     #* Convert to grey scale
-                    self.originalGreyImage = np.array(Image.open(imagePath).convert('L'))
+                    self.originalGreyImage = np.array(Image.open(self.Path).convert('L'))
                     #* Draw original image
                     self.drawCanvas(self.originalGreyImage, self.originalFGridLayout)
-            elif pathlib.Path(imagePath).suffix == ".dcm":
+            elif pathlib.Path(self.Path).suffix == ".dcm":
                     #* Read DICOM image    
-                    image = dicom.dcmread(imagePath)
+                    self.openOriginalImage = dicom.dcmread(self.Path)
+                    self.originalWidth = self.openOriginalImage.Rows
+                    self.originalHeight = self.openOriginalImage.Columns
                     #* Convert image 2D array
-                    self.originalGreyImage = image.pixel_array.astype(int)
+                    self.originalGreyImage = self.openOriginalImage.pixel_array.astype(int)
                     self.originalGreyImage = (np.maximum(self.originalGreyImage, 0) / self.originalGreyImage.max()) * 255.0
                     self.originalGreyImage = np.uint8(self.originalGreyImage)
                     #* Draw original image
-                    self.drawCanvas(image.pixel_array, self.originalFGridLayout)
+                    self.drawCanvas(self.openOriginalImage.pixel_array, self.originalFGridLayout)
         except:
             self.ShowPopUpMessage("An ERROR OCCURED!!")
 
     #! Filter 
     def filter(self):
-
+        
         kernelSize = self.kernelSizeSpinBox.value()
         kFactor = self.kFactorSpinBox.value()
 
         kernelMatrix = np.full((kernelSize, kernelSize), 1/(kernelSize * kernelSize))
 
-        originalWidth = self.openOriginalImage.width
-        originalHeight = self.openOriginalImage.height
         originalImage = self.originalGreyImage
 
-        imageNewWidthWithPadding = originalWidth + kernelSize - 1
-        imageNewHeightWithPadding = originalHeight + kernelSize - 1
+        imageNewWidthWithPadding = self.originalWidth + kernelSize - 1
+        imageNewHeightWithPadding = self.originalHeight + kernelSize - 1
 
         originalImageWithZeroPadding = np.pad(originalImage, kernelSize//2)
+        print(originalImageWithZeroPadding)
+        # originalImageWithZeroPadding = np.empty([imageNewWidthWithPadding, imageNewHeightWithPadding])
+        # for i in range(kernelSize//2):
+        #     for j in range(len(originalImageWithZeroPadding)):
+        #         originalImageWithZeroPadding[i][j]= 0
+        # for i in range(kernelSize//2):
+        #     for j in range(len(originalImageWithZeroPadding)):
+        #         originalImageWithZeroPadding[j][i]= 0
+        # for i in range(1, len_seq_2 + 1):
+        #     for j in range(1, len_seq_1 + 1):
+        #         originalImageWithZeroPadding[i][j] = originalImage[i][j]
+        print(originalImageWithZeroPadding)
+        
         filteredImage = np.zeros((imageNewHeightWithPadding, imageNewWidthWithPadding))
         
-        for i in range(originalHeight):
-            for j in range(originalWidth):
+        for i in range(self.originalHeight):
+            for j in range(self.originalWidth):
                 result = 0
                 for m in range(kernelSize):
                     for n in range(kernelSize):
                         result += originalImageWithZeroPadding[m + i, n + j] * kernelMatrix[m, n]
                 filteredImage[i + kernelSize//2, j + kernelSize//2] = result
-
+ 
         subtractBlurredImage = originalImageWithZeroPadding - filteredImage
         multiplyByKFactor = subtractBlurredImage * kFactor
         enhancedImage = multiplyByKFactor + originalImageWithZeroPadding
+
+        for i in range(len(enhancedImage)):
+            for j in range(len(enhancedImage[0])):
+                if enhancedImage[i, j] < 0:
+                    enhancedImage[i, j] = 0
+                elif enhancedImage[i, j] > 255:
+                    enhancedImage[i, j] = 255
+                
         self.drawCanvas(enhancedImage, self.filterGridLayout)
+
+    def addSaltAndPepperNoise(self):
+        percentageOfSaltPepperNoise = self.percentageAddNoiseSpinBox.value()
+        if (pathlib.Path(self.Path).suffix == ".jpg") or (pathlib.Path(self.Path).suffix == ".bmp") or (pathlib.Path(self.Path).suffix == ".jpeg"):
+            image = np.array(self.openOriginalImage.convert('L'))
+        elif pathlib.Path(self.Path).suffix == ".dcm":
+            image = self.openOriginalImage.pixel_array.astype(int)
+            image = (np.maximum(image, 0) / image.max()) * 255.0
+            image = np.uint8(image)
+        
+        self.saltAndPepperImage = np.zeros_like(image)
+        pepper = percentageOfSaltPepperNoise / 100
+        salt = 1 - pepper
+        for i in range(self.originalHeight):
+            for j in range(self.originalWidth):
+                rdn = np.random.random()
+                if rdn < pepper:
+                    self.saltAndPepperImage[i][j] = 0
+                elif rdn > salt:
+                    self.saltAndPepperImage[i][j] = 255
+                else:
+                    self.saltAndPepperImage[i, j] = image[i, j]
+
+        self.drawCanvas(self.saltAndPepperImage, self.saltAndPapperGridLayout)
+    
+    def medianFilter(self):
+        temp = []
+        filterSize = self.medianFilterSpinBox.value()
+        indexer = filterSize // 2
+        data_final = []
+        data_final = np.zeros((len(self.saltAndPepperImage),len(self.saltAndPepperImage[0])))
+        for i in range(len(self.saltAndPepperImage)):
+
+            for j in range(len(self.saltAndPepperImage[0])):
+
+                for z in range(filterSize):
+                    if i + z - indexer < 0 or i + z - indexer > len(self.saltAndPepperImage) - 1:
+                        for c in range(filterSize):
+                            temp.append(0)
+                    else:
+                        if j + z - indexer < 0 or j + indexer > len(self.saltAndPepperImage[0]) - 1:
+                            temp.append(0)
+                        else:
+                            for k in range(filterSize):
+                                temp.append(self.saltAndPepperImage[i + z - indexer][j + k - indexer])
+                self.merge_sort(temp)
+                data_final[i][j] = temp[len(temp) // 2]
+                temp = []
+        self.drawCanvas(data_final, self.denoisedImageGridLayout)
+        
+    def merge_sort(self, array):
+        if len(array) > 1:
+            mid = len(array) // 2
+
+            Left = array[:mid]
+            Right = array[mid:]
+
+            self.merge_sort(Left)
+            self.merge_sort(Right)
+            i = 0
+            j = 0
+            k = 0
+            while i < len(Left) and j < len(Right):
+                if (Left[i] <= Right[j]):
+                    array[k] = Left[i]
+                    i += 1
+                else:
+                    array[k] = Right[j]
+                    j += 1
+                k += 1
+
+            while i < len(Left):
+                array[k] = Left[i]
+                i += 1
+                k += 1
+
+            while j < len(Right):
+                array[k] = Right[j]
+                j += 1
+                k += 1
+
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
@@ -833,7 +941,7 @@ class Ui(QtWidgets.QMainWindow):
         label.setText(str(width) + str(' x ') + str(height))
                                                
                                                 #?######## Task 4 Helper Functions  #########
- #! Draw Histogram
+    #! Draw Histogram
     def drawHistogram(self, layout, x, y):
         #* Create a canvas
         self.figure = plt.figure(figsize=(15,5))
