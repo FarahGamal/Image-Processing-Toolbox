@@ -1501,7 +1501,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="2" column="1" colspan="2">
+               <item row="2" column="3">
                 <widget class="QPushButton" name="filterPushButton">
                  <property name="styleSheet">
                   <string notr="true">background-color: rgb(83, 194, 191);</string>
@@ -1509,6 +1509,38 @@
                  <property name="text">
                   <string>Filter</string>
                  </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QPushButton" name="clippingPushButton">
+                 <property name="styleSheet">
+                  <string notr="true">background-color: rgb(83, 194, 191);</string>
+                 </property>
+                 <property name="text">
+                  <string>Clipping Rescale</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <attribute name="buttonGroup">
+                  <string notr="true">buttonGroup_3</string>
+                 </attribute>
+                </widget>
+               </item>
+               <item row="2" column="2">
+                <widget class="QPushButton" name="rescalePushButton">
+                 <property name="styleSheet">
+                  <string notr="true">background-color: rgb(83, 194, 191);</string>
+                 </property>
+                 <property name="text">
+                  <string>Rescale</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <attribute name="buttonGroup">
+                  <string notr="true">buttonGroup_3</string>
+                 </attribute>
                 </widget>
                </item>
               </layout>
@@ -1614,7 +1646,8 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup"/>
   <buttongroup name="buttonGroup_2"/>
+  <buttongroup name="buttonGroup"/>
+  <buttongroup name="buttonGroup_3"/>
  </buttongroups>
 </ui>

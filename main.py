@@ -38,6 +38,8 @@ class Ui(QtWidgets.QMainWindow):
         self.browsePushButton.clicked.connect(self.openImageZoomTab)
         self.addNoisePushButton.clicked.connect(self.addSaltAndPepperNoise)
         self.generateTLetterPushButton.clicked.connect(self.generateTLetter)
+        self.clippingPushButton.clicked.connect(self.filter)
+        self.rescalePushButton.clicked.connect(self.filter)
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
@@ -793,12 +795,23 @@ class Ui(QtWidgets.QMainWindow):
                 #* then we add it to the original one
                 enhancedImage = multiplyByKFactor + originalImageWithZeroPadding
                 #* here we make rescale to make sure pixels value in range 0-255
-                for i in range(len(enhancedImage)):
-                    for j in range(len(enhancedImage[0])):
-                        if enhancedImage[i, j] < 0:
-                            enhancedImage[i, j] = 0
-                        elif enhancedImage[i, j] > 255:
-                            enhancedImage[i, j] = 255        
+                #* clipping
+                if self.clippingPushButton.isChecked():
+                    for i in range(len(enhancedImage)):
+                        for j in range(len(enhancedImage[0])):
+                            if enhancedImage[i, j] < 0:
+                                enhancedImage[i, j] = 0
+                            elif enhancedImage[i, j] > 255:
+                                enhancedImage[i, j] = 255 
+                #* another rescale 
+                elif self.rescalePushButton.isChecked():
+                    for i in range(len(enhancedImage)):
+                        for j in range(len(enhancedImage[0])):
+                            enhancedImage[i][j] = enhancedImage[i][j] - np.min(enhancedImage)   
+                    for i in range(len(enhancedImage)):
+                        for j in range(len(enhancedImage[0])):
+                            enhancedImage[i][j] = ((enhancedImage[i][j])/np.max(enhancedImage))*255
+
                 self.drawCanvas(enhancedImage, self.filterGridLayout)
         except:
             self.ShowPopUpMessage("An ERROR OCCURED!!")
@@ -825,6 +838,7 @@ class Ui(QtWidgets.QMainWindow):
                 for j in range(self.originalWidth):
                     #* pick a random number 
                     rdn = np.random.random()
+                    print(rdn)
                     if rdn < pepper:
                         self.saltAndPepperImage[i][j] = 0
                     elif rdn > salt:
