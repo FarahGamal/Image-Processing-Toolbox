@@ -752,134 +752,130 @@ class Ui(QtWidgets.QMainWindow):
 
     #! Filter 
     def filter(self):
-        
-        kernelSize = self.kernelSizeSpinBox.value()
-        kFactor = self.kFactorSpinBox.value()
-
-        kernelMatrix = np.full((kernelSize, kernelSize), 1/(kernelSize * kernelSize))
-
-        originalImage = self.originalGreyImage
-
-        imageNewWidthWithPadding = self.originalWidth + kernelSize - 1
-        imageNewHeightWithPadding = self.originalHeight + kernelSize - 1
-
-        originalImageWithZeroPadding = np.pad(originalImage, kernelSize//2)
-        print(originalImageWithZeroPadding)
-        # originalImageWithZeroPadding = np.empty([imageNewWidthWithPadding, imageNewHeightWithPadding])
-        # for i in range(kernelSize//2):
-        #     for j in range(len(originalImageWithZeroPadding)):
-        #         originalImageWithZeroPadding[i][j]= 0
-        # for i in range(kernelSize//2):
-        #     for j in range(len(originalImageWithZeroPadding)):
-        #         originalImageWithZeroPadding[j][i]= 0
-        # for i in range(1, len_seq_2 + 1):
-        #     for j in range(1, len_seq_1 + 1):
-        #         originalImageWithZeroPadding[i][j] = originalImage[i][j]
-        print(originalImageWithZeroPadding)
-        
-        filteredImage = np.zeros((imageNewHeightWithPadding, imageNewWidthWithPadding))
-        
-        for i in range(self.originalHeight):
-            for j in range(self.originalWidth):
-                result = 0
-                for m in range(kernelSize):
-                    for n in range(kernelSize):
-                        result += originalImageWithZeroPadding[m + i, n + j] * kernelMatrix[m, n]
-                filteredImage[i + kernelSize//2, j + kernelSize//2] = result
- 
-        subtractBlurredImage = originalImageWithZeroPadding - filteredImage
-        multiplyByKFactor = subtractBlurredImage * kFactor
-        enhancedImage = multiplyByKFactor + originalImageWithZeroPadding
-
-        for i in range(len(enhancedImage)):
-            for j in range(len(enhancedImage[0])):
-                if enhancedImage[i, j] < 0:
-                    enhancedImage[i, j] = 0
-                elif enhancedImage[i, j] > 255:
-                    enhancedImage[i, j] = 255
-                
-        self.drawCanvas(enhancedImage, self.filterGridLayout)
-
-    def addSaltAndPepperNoise(self):
-        percentageOfSaltPepperNoise = self.percentageAddNoiseSpinBox.value()
-        if (pathlib.Path(self.Path).suffix == ".jpg") or (pathlib.Path(self.Path).suffix == ".bmp") or (pathlib.Path(self.Path).suffix == ".jpeg"):
-            image = np.array(self.openOriginalImage.convert('L'))
-        elif pathlib.Path(self.Path).suffix == ".dcm":
-            image = self.openOriginalImage.pixel_array.astype(int)
-            image = (np.maximum(image, 0) / image.max()) * 255.0
-            image = np.uint8(image)
-        
-        self.saltAndPepperImage = np.zeros_like(image)
-        pepper = percentageOfSaltPepperNoise / 100
-        salt = 1 - pepper
-        for i in range(self.originalHeight):
-            for j in range(self.originalWidth):
-                rdn = np.random.random()
-                if rdn < pepper:
-                    self.saltAndPepperImage[i][j] = 0
-                elif rdn > salt:
-                    self.saltAndPepperImage[i][j] = 255
-                else:
-                    self.saltAndPepperImage[i, j] = image[i, j]
-
-        self.drawCanvas(self.saltAndPepperImage, self.saltAndPapperGridLayout)
+        try:
+            #* get kernel size and k factor from user as input
+            kernelSize = self.kernelSizeSpinBox.value()
+            kFactor = self.kFactorSpinBox.value()
+            #* check if kernel size is even or equals to 0
+            if kernelSize % 2 == 0 or kernelSize == 0:
+                self.ShowPopUpMessage("Error! Plese, Enter any odd kernel size!")
+                pass
+            else:
+                #* create a kernel matrix with dimension of kernel and
+                #* values of the elements in the matrix 1 over total size 
+                kernelMatrix = np.full((kernelSize, kernelSize), 1/(kernelSize * kernelSize))
+                originalImage = self.originalGreyImage
+                #* calculate new width and height with filter
+                imageNewWidthWithPadding = self.originalWidth + kernelSize - 1
+                imageNewHeightWithPadding = self.originalHeight + kernelSize - 1
+                #* add zero padding to original image
+                originalImageWithZeroPadding = self.zeroPadding(kernelSize, self.originalHeight, self.originalWidth, originalImage)
+                #* create filtered image with same dimension of padding image
+                filteredImage = np.zeros((imageNewHeightWithPadding, imageNewWidthWithPadding))
+                #* convolution
+                #* loop over original image
+                for i in range(self.originalHeight):
+                    for j in range(self.originalWidth):
+                        #* initialize result variable with 0 
+                        result = 0
+                        #* loop over kernel
+                        for m in range(kernelSize):
+                            for n in range(kernelSize):
+                                #* multiply original image by kernel element wise 
+                                #* store the result
+                                result += originalImageWithZeroPadding[m + i, n + j] * kernelMatrix[m, n]
+                        #* insert the result in the filtered image 
+                        filteredImage[i + kernelSize//2, j + kernelSize//2] = result
+                #* here we subtract original image from image result from convolution
+                subtractBlurredImage = originalImageWithZeroPadding - filteredImage
+                #* here subtracted image multiply by K factor
+                multiplyByKFactor = subtractBlurredImage * kFactor
+                #* then we add it to the original one
+                enhancedImage = multiplyByKFactor + originalImageWithZeroPadding
+                #* here we make rescale to make sure pixels value in range 0-255
+                for i in range(len(enhancedImage)):
+                    for j in range(len(enhancedImage[0])):
+                        if enhancedImage[i, j] < 0:
+                            enhancedImage[i, j] = 0
+                        elif enhancedImage[i, j] > 255:
+                            enhancedImage[i, j] = 255        
+                self.drawCanvas(enhancedImage, self.filterGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
     
-    def medianFilter(self):
-        temp = []
-        filterSize = self.medianFilterSpinBox.value()
-        indexer = filterSize // 2
-        data_final = []
-        data_final = np.zeros((len(self.saltAndPepperImage),len(self.saltAndPepperImage[0])))
-        for i in range(len(self.saltAndPepperImage)):
-
-            for j in range(len(self.saltAndPepperImage[0])):
-
-                for z in range(filterSize):
-                    if i + z - indexer < 0 or i + z - indexer > len(self.saltAndPepperImage) - 1:
-                        for c in range(filterSize):
-                            temp.append(0)
+    #! add salt and pepper noise 
+    def addSaltAndPepperNoise(self):
+        try:
+            #* get precentage of salt and pepper noise as use input
+            percentageOfSaltPepperNoise = self.percentageAddNoiseSpinBox.value()
+            #* check either jpg or bmp or dicom image
+            if (pathlib.Path(self.Path).suffix == ".jpg") or (pathlib.Path(self.Path).suffix == ".bmp") or (pathlib.Path(self.Path).suffix == ".jpeg"):
+                image = np.array(self.openOriginalImage.convert('L'))
+            elif pathlib.Path(self.Path).suffix == ".dcm":
+                image = self.openOriginalImage.pixel_array.astype(int)
+                image = (np.maximum(image, 0) / image.max()) * 255.0
+                image = np.uint8(image)   
+            #* create an array of zero same dimension as image
+            self.saltAndPepperImage = np.zeros_like(image)
+            #* calculate % of salt and pepper
+            pepper = percentageOfSaltPepperNoise / 100
+            salt = 1 - pepper
+            #* loop over image
+            for i in range(self.originalHeight):
+                for j in range(self.originalWidth):
+                    #* pick a random number 
+                    rdn = np.random.random()
+                    if rdn < pepper:
+                        self.saltAndPepperImage[i][j] = 0
+                    elif rdn > salt:
+                        self.saltAndPepperImage[i][j] = 255
                     else:
-                        if j + z - indexer < 0 or j + indexer > len(self.saltAndPepperImage[0]) - 1:
-                            temp.append(0)
-                        else:
-                            for k in range(filterSize):
-                                temp.append(self.saltAndPepperImage[i + z - indexer][j + k - indexer])
-                self.merge_sort(temp)
-                data_final[i][j] = temp[len(temp) // 2]
+                        self.saltAndPepperImage[i, j] = image[i, j]
+
+            self.drawCanvas(self.saltAndPepperImage, self.saltAndPapperGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
+    
+    #! median filter to remove salt and pepper noise
+    def medianFilter(self):
+        try:
+            filterSize = self.medianFilterSpinBox.value()
+            if filterSize % 2 == 0 or filterSize == 0:
+                self.ShowPopUpMessage("Error! Plese, Enter any odd kernel size!")
+                pass
+            else:
+                #* empty list as templet
                 temp = []
-        self.drawCanvas(data_final, self.denoisedImageGridLayout)
+                indexer = filterSize // 2
+                filteredImage = []
+                #* create an array of zeros same dimension as salt and pepper image
+                filteredImage = np.zeros((len(self.saltAndPepperImage),len(self.saltAndPepperImage[0])))
+                #* loop over salt and pepper image
+                for i in range(len(self.saltAndPepperImage)):
+                    for j in range(len(self.saltAndPepperImage[0])):
+                        #* loop over median filter
+                        for z in range(filterSize):
+                            #* check if pixel index is negative or out of range 
+                            if i + z - indexer < 0 or i + z - indexer > len(self.saltAndPepperImage) - 1:
+                                for c in range(filterSize):
+                                    temp.append(0)
+                            else:
+                                #* check if pixel index is negative or out of range 
+                                if j + z - indexer < 0 or j + indexer > len(self.saltAndPepperImage[0]) - 1:
+                                    temp.append(0)
+                                else:
+                                    for k in range(filterSize):
+                                        temp.append(self.saltAndPepperImage[i + z - indexer][j + k - indexer])
+                        #* sort list
+                        self.mergeSort(temp)
+                        #* get median value and insert in filtered image
+                        filteredImage[i][j] = temp[len(temp) // 2]
+                        #* make temp empty again
+                        temp = []
+                self.drawCanvas(filteredImage, self.denoisedImageGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
         
-    def merge_sort(self, array):
-        if len(array) > 1:
-            mid = len(array) // 2
-
-            Left = array[:mid]
-            Right = array[mid:]
-
-            self.merge_sort(Left)
-            self.merge_sort(Right)
-            i = 0
-            j = 0
-            k = 0
-            while i < len(Left) and j < len(Right):
-                if (Left[i] <= Right[j]):
-                    array[k] = Left[i]
-                    i += 1
-                else:
-                    array[k] = Right[j]
-                    j += 1
-                k += 1
-
-            while i < len(Left):
-                array[k] = Left[i]
-                i += 1
-                k += 1
-
-            while j < len(Right):
-                array[k] = Right[j]
-                j += 1
-                k += 1
-
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
@@ -952,6 +948,53 @@ class Ui(QtWidgets.QMainWindow):
         plt.ylabel('Number of Pixels')
         plt.xlabel('Pixel Value')
         self.Canvas.draw()                                              
+
+                                                #?######## Task 5 Helper Functions  #########
+    #! merge sort
+    def mergeSort(self, array):
+        try:
+            if len(array) > 1:
+                mid = len(array) // 2
+                Left = array[:mid]
+                Right = array[mid:]
+                self.mergeSort(Left)
+                self.mergeSort(Right)
+                i = 0
+                j = 0
+                k = 0
+                while i < len(Left) and j < len(Right):
+                    if (Left[i] <= Right[j]):
+                        array[k] = Left[i]
+                        i += 1
+                    else:
+                        array[k] = Right[j]
+                        j += 1
+                    k += 1
+                while i < len(Left):
+                    array[k] = Left[i]
+                    i += 1
+                    k += 1
+                while j < len(Right):
+                    array[k] = Right[j]
+                    j += 1
+                    k += 1
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
+
+    #! zero padding function
+    def zeroPadding(self, kernelSize, height, width, array):
+        try:
+            #* get padding size
+            paddingSize = kernelSize // 2
+            #* create image of zeros with dimension of image and kernel
+            zeroPaddedImage = np.zeros((height + (kernelSize - 1), width + (kernelSize - 1)))
+            #* loop over image to insert image pixel values after adding zero padding
+            for i in range(paddingSize, height + paddingSize):
+                for j in range(paddingSize, width + paddingSize):
+                    zeroPaddedImage[i][j] = array[i - paddingSize][j - paddingSize]
+            return zeroPaddedImage
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
 
                                                 #?######## General Helper Functions  #########
 
