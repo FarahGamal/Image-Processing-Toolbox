@@ -29,6 +29,8 @@ class Ui(QtWidgets.QMainWindow):
         self.shearPushButton.clicked.connect(self.shear)
         self.browseButton.clicked.connect(self.openImage)
         self.filterPushButton.clicked.connect(self.filter)
+        self.rescalePushButton.clicked.connect(self.filter)
+        self.clippingPushButton.clicked.connect(self.filter)
         self.nearestPushButton.clicked.connect(self.rotation)
         self.bilinearPushButton.clicked.connect(self.rotation)
         self.equalizePushButton.clicked.connect(self.equalize)
@@ -38,8 +40,8 @@ class Ui(QtWidgets.QMainWindow):
         self.browsePushButton.clicked.connect(self.openImageZoomTab)
         self.addNoisePushButton.clicked.connect(self.addSaltAndPepperNoise)
         self.generateTLetterPushButton.clicked.connect(self.generateTLetter)
-        self.clippingPushButton.clicked.connect(self.filter)
-        self.rescalePushButton.clicked.connect(self.filter)
+        self.fourierPushButton.clicked.connect(self.browseFourier)
+
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
@@ -838,7 +840,6 @@ class Ui(QtWidgets.QMainWindow):
                 for j in range(self.originalWidth):
                     #* pick a random number 
                     rdn = np.random.random()
-                    print(rdn)
                     if rdn < pepper:
                         self.saltAndPepperImage[i][j] = 0
                     elif rdn > salt:
@@ -883,13 +884,85 @@ class Ui(QtWidgets.QMainWindow):
                         #* sort list
                         self.mergeSort(temp)
                         #* get median value and insert in filtered image
-                        filteredImage[i][j] = temp[len(temp) // 2]
+                        if len(temp) % 2 ==0:
+                            higherElement = temp[len(temp) // 2]
+                            lowerElement = temp[(len(temp) // 2) - 1]
+                            filteredImage[i][j] = (lowerElement + higherElement)/2
+                        else:
+                            filteredImage[i][j] = temp[len(temp) // 2]
                         #* make temp empty again
                         temp = []
                 self.drawCanvas(filteredImage, self.denoisedImageGridLayout)
         except:
             self.ShowPopUpMessage("An ERROR OCCURED!!")
-        
+
+#?-----------------------------------------------------------------------------------------------------------------------------#
+
+                                                #?######## Task 6 Functions  #########
+
+    #! Browes
+    def browseFourier(self):
+        try:
+
+            self.clearCanvas(self.fourierOriginalGridLayout)
+            self.clearCanvas(self.magnitudeGridLayout)
+            self.clearCanvas(self.phaseGridLayout)
+            self.clearCanvas(self.logMagnitudeGridLayout)
+            self.clearCanvas(self.logPhaseGridLayout)
+
+            #* Get image path
+            fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images', "Image files (*.jpg *.jpeg *.bmp *.dcm)")
+            Path = fileName[0]
+            
+            #* Check image format
+            if (pathlib.Path(Path).suffix == ".jpg") or (pathlib.Path(Path).suffix == ".bmp") or (pathlib.Path(Path).suffix == ".jpeg"):
+                #* open image and convert it to array
+                openOriginalImage = Image.open(Path)
+                imageShape = np.array(openOriginalImage)
+                #* Check if the image grey scale or not 
+                if imageShape.ndim == 2 and openOriginalImage.mode == 'L':
+                    originalGreyImage = imageShape
+                    #* Draw original image
+                else:
+                    #* Convert to grey scale
+                    originalGreyImage = np.array(Image.open(Path).convert('L'))
+                #* Draw original image
+                self.drawCanvas(originalGreyImage, self.fourierOriginalGridLayout)
+                
+            elif pathlib.Path(Path).suffix == ".dcm":
+                    #* Read DICOM image    
+                    openOriginalImage = dicom.dcmread(Path)
+                    #* Convert image 2D array
+                    originalGreyImage = openOriginalImage.pixel_array.astype(int)
+                    originalGreyImage = (np.maximum(originalGreyImage, 0) / originalGreyImage.max()) * 255.0
+                    originalGreyImage = np.uint8(originalGreyImage)
+                    #* Draw original image
+                    self.drawCanvas(openOriginalImage.pixel_array, self.fourierOriginalGridLayout)
+            
+            mag, phase = self.fourier(originalGreyImage)
+            self.fourierLog(mag, phase)
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
+
+    def fourier(self, image):
+        try:
+            fft = np.fft.fftshift(np.fft.fft2(image))
+            magnitude = np.abs(fft)
+            phase = np.angle(fft)
+            self.drawCanvas(magnitude ,self.magnitudeGridLayout)
+            self.drawCanvas(phase ,self.phaseGridLayout)
+            return magnitude, phase
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
+
+    def fourierLog(self, mag, phase):
+        try:
+            magnitudeLog = np.log(mag)
+            phaseLog = np.log(phase)
+            self.drawCanvas(magnitudeLog ,self.logMagnitudeGridLayout)
+            self.drawCanvas(phaseLog ,self.logPhaseGridLayout)      
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!") 
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
