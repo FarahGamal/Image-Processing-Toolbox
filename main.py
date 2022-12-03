@@ -947,8 +947,8 @@ class Ui(QtWidgets.QMainWindow):
     def fourier(self, image):
         try:
             fft = np.fft.fftshift(np.fft.fft2(image))
-            magnitude = np.abs(fft)
-            phase = np.angle(fft)
+            magnitude = np.sqrt((fft.real ** 2) + (fft.imag ** 2))
+            phase = np.arctan2(fft.imag, fft.real)
             self.drawCanvas(magnitude ,self.magnitudeGridLayout)
             self.drawCanvas(phase ,self.phaseGridLayout)
             return magnitude, phase
@@ -957,8 +957,8 @@ class Ui(QtWidgets.QMainWindow):
 
     def fourierLog(self, mag, phase):
         try:
-            magnitudeLog = np.log(mag)
-            phaseLog = np.log(phase)
+            magnitudeLog = np.log(mag + 1)
+            phaseLog = np.log(phase + 2 * math.pi)
             self.drawCanvas(magnitudeLog ,self.logMagnitudeGridLayout)
             self.drawCanvas(phaseLog ,self.logPhaseGridLayout)      
         except:
