@@ -953,7 +953,7 @@ class Ui(QtWidgets.QMainWindow):
             self.drawCanvas(phase ,self.phaseGridLayout)
             return magnitude, phase
         except:
-            self.ShowPopUpMessage("An ERROR OCCURED!!")
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
 
     def fourierLog(self, mag, phase):
         try:
@@ -962,7 +962,7 @@ class Ui(QtWidgets.QMainWindow):
             self.drawCanvas(magnitudeLog ,self.logMagnitudeGridLayout)
             self.drawCanvas(phaseLog ,self.logPhaseGridLayout)      
         except:
-            self.ShowPopUpMessage("An ERROR OCCURED!!") 
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!") 
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
