@@ -21,7 +21,7 @@
        <string notr="true">background-color: rgb(26, 30, 35);</string>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>6</number>
       </property>
       <widget class="QWidget" name="imageViewerTab">
        <attribute name="title">
@@ -687,7 +687,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab">
+      <widget class="QWidget" name="rotationTab">
        <attribute name="title">
         <string>Rotation</string>
        </attribute>
@@ -1022,7 +1022,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_2">
+      <widget class="QWidget" name="histogramTab">
        <attribute name="title">
         <string>Histogram</string>
        </attribute>
@@ -1234,7 +1234,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_3">
+      <widget class="QWidget" name="FilteringTab">
        <attribute name="title">
         <string>Filtering</string>
        </attribute>
@@ -1622,7 +1622,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_4">
+      <widget class="QWidget" name="fourierTab">
        <attribute name="title">
         <string>Fourier</string>
        </attribute>
@@ -1853,6 +1853,203 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="filteringInFourierDomainTab">
+       <attribute name="title">
+        <string>Filtering in FD</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_41">
+        <item row="3" column="0" colspan="2">
+         <widget class="QGroupBox" name="groupBox_3">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
+          <property name="title">
+           <string>GroupBox</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_39">
+           <item row="0" column="1">
+            <widget class="QSpinBox" name="spinBox"/>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_26">
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Kernel Size</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QPushButton" name="differenceGMPushButton">
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(83, 194, 191);</string>
+             </property>
+             <property name="text">
+              <string>Difference (gm)</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <attribute name="buttonGroup">
+              <string notr="true">buttonGroup_4</string>
+             </attribute>
+            </widget>
+           </item>
+           <item row="0" column="2" colspan="2">
+            <widget class="QPushButton" name="frequencyPushButton">
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(83, 194, 191);</string>
+             </property>
+             <property name="text">
+              <string>Frequency Filter</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <attribute name="buttonGroup">
+              <string notr="true">buttonGroup_4</string>
+             </attribute>
+            </widget>
+           </item>
+           <item row="2" column="3">
+            <widget class="QPushButton" name="differenceClippingPushButton">
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(83, 194, 191);</string>
+             </property>
+             <property name="text">
+              <string>Difference (clipping)</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <attribute name="buttonGroup">
+              <string notr="true">buttonGroup_4</string>
+             </attribute>
+            </widget>
+           </item>
+           <item row="1" column="2" colspan="2">
+            <widget class="QPushButton" name="spatialPushButton">
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(83, 194, 191);</string>
+             </property>
+             <property name="text">
+              <string>Spatial Filter </string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <attribute name="buttonGroup">
+              <string notr="true">buttonGroup_4</string>
+             </attribute>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLabel" name="label_25">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
+          <property name="text">
+           <string>Filtered Image</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QScrollArea" name="scrollArea_21">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scrollAreaWidgetContents_21">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>604</width>
+             <height>477</height>
+            </rect>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_37">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="filteredImageGridLayout"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_24">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
+          <property name="text">
+           <string>Image</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QScrollArea" name="scrollArea_17">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scrollAreaWidgetContents_17">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>605</width>
+             <height>477</height>
+            </rect>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_35">
+            <item row="0" column="0">
+             <layout class="QGridLayout" name="imagegridLayout"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QPushButton" name="browseFDPushButton">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(83, 194, 191);</string>
+          </property>
+          <property name="text">
+           <string>Browse</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -1878,7 +2075,8 @@
  <connections/>
  <buttongroups>
   <buttongroup name="buttonGroup_3"/>
-  <buttongroup name="buttonGroup"/>
   <buttongroup name="buttonGroup_2"/>
+  <buttongroup name="buttonGroup"/>
+  <buttongroup name="buttonGroup_4"/>
  </buttongroups>
 </ui>

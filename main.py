@@ -3,7 +3,7 @@
 
 import random
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageChops
 import pydicom as dicom
 import sys, pathlib, math
 from PyQt5.QtCore import *
@@ -36,11 +36,17 @@ class Ui(QtWidgets.QMainWindow):
         self.equalizePushButton.clicked.connect(self.equalize)
         self.shearNegativePushButton.clicked.connect(self.shear)
         self.denoisePushButton.clicked.connect(self.medianFilter)
+        self.fourierPushButton.clicked.connect(self.browseFourier)
         self.filteringPushButton.clicked.connect(self.browseFilter)
         self.browsePushButton.clicked.connect(self.openImageZoomTab)
+        self.browseFDPushButton.clicked.connect(self.browseFourierFilter)
         self.addNoisePushButton.clicked.connect(self.addSaltAndPepperNoise)
         self.generateTLetterPushButton.clicked.connect(self.generateTLetter)
-        self.fourierPushButton.clicked.connect(self.browseFourier)
+        self.frequencyPushButton.clicked.connect(self.filterFourierDomain)
+        self.spatialPushButton.clicked.connect(self.filterFourierDomain)
+        self.differenceClippingPushButton.clicked.connect(self.filterFourierDomain)
+        self.differenceGMPushButton.clicked.connect(self.filterFourierDomain)
+
 
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
@@ -966,6 +972,125 @@ class Ui(QtWidgets.QMainWindow):
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
+                                                #?######## Task 7 Functions  #########
+
+    #! Browes
+    def browseFourierFilter(self):
+        try:
+
+            self.clearCanvas(self.imagegridLayout)
+            self.clearCanvas(self.filteredImageGridLayout)
+
+            #* Get image path
+            fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open image','D:\FALL22\SBEN324\Task#1\Image-Viewer\images', "Image files (*.jpg *.jpeg *.bmp *.dcm)")
+            Path = fileName[0]
+            
+            #* Check image format
+            if (pathlib.Path(Path).suffix == ".jpg") or (pathlib.Path(Path).suffix == ".bmp") or (pathlib.Path(Path).suffix == ".jpeg"):
+                #* open image and convert it to array
+                openOriginalImage = Image.open(Path)
+                imageShape = np.array(openOriginalImage)
+                #* Check if the image grey scale or not 
+                if imageShape.ndim == 2 and openOriginalImage.mode == 'L':
+                    self.browedImage = imageShape
+                    #* Draw original image
+                else:
+                    #* Convert to grey scale
+                    self.browedImage = np.array(Image.open(Path).convert('L'))
+                #* Draw original image
+                self.drawCanvas(self.browedImage, self.imagegridLayout)
+                
+            elif pathlib.Path(Path).suffix == ".dcm":
+                    #* Read DICOM image    
+                    openOriginalImage = dicom.dcmread(Path)
+                    #* Convert image 2D array
+                    self.browedImage = openOriginalImage.pixel_array.astype(int)
+                    self.browedImage = (np.maximum(self.browedImage, 0) / self.browedImage.max()) * 255.0
+                    self.browedImage = np.uint8(self.browedImage)
+                    #* Draw original image
+                    self.drawCanvas(openOriginalImage.pixel_array, self.imagegridLayout)
+            # self.browedImage = originalGreyImage
+            # self.filterFourierDomain(originalGreyImage)
+        except:
+            self.ShowPopUpMessage("An ERROR OCCURED!!")
+
+    #! filter in fourier domain
+    def filterFourierDomain(self):
+        
+        kernelSize = self.spinBox.value()
+        if kernelSize % 2 == 0 or kernelSize == 0:
+                self.ShowPopUpMessage("Error! Plese, Enter any odd kernel size!")
+                pass
+
+        else:
+            
+            kernelMatrix = np.full((kernelSize, kernelSize), 1/(kernelSize * kernelSize))
+            paddedKernel = self.zeroPadKernel(kernelMatrix, self.browedImage)
+
+            imageFourierDomain = np.fft.fftshift(np.fft.fft2(self.browedImage))
+            kernelFourierDomain = np.fft.fftshift(np.fft.fft2(paddedKernel))
+
+            multipliedImage = imageFourierDomain * kernelFourierDomain
+            
+            resultImage = np.fft.ifftshift(multipliedImage)
+            finalImage = np.fft.fftshift(np.fft.ifft2(resultImage))
+            
+            #* create a kernel matrix with dimension of kernel and
+            #* values of the elements in the matrix 1 over total size 
+            kernelPad = kernelSize // 2
+            kernelMat = np.full((kernelSize, kernelSize), 1/(kernelSize * kernelSize))
+            originalImage = np.copy(self.browedImage)
+            #* calculate new width and height with filter
+            imageNewWidthWithPadding = len(originalImage[0]) + kernelSize - 1
+            imageNewHeightWithPadding = len(originalImage) + kernelSize - 1
+            #* add zero padding to original image
+            originalImageWithZeroPadding = self.zeroPadding(kernelSize, len(originalImage), len(originalImage[0]), originalImage)
+            #* create filtered image with same dimension of padding image
+            filteredImage = np.zeros((imageNewHeightWithPadding, imageNewWidthWithPadding))
+            #* convolution
+            #* loop over original image
+            for i in range(len(originalImage)):
+                for j in range(len(originalImage[0])):
+                    #* initialize result variable with 0 
+                    result = 0
+                    #* loop over kernel
+                    for m in range(kernelSize):
+                        for n in range(kernelSize):
+                            #* multiply original image by kernel element wise 
+                            #* store the result
+                            result += originalImageWithZeroPadding[m + i, n + j] * kernelMat[m, n]
+                    #* insert the result in the filtered image 
+                    filteredImage[i + kernelSize//2, j + kernelSize//2] = result
+
+            filteredImage = filteredImage[kernelPad : len(originalImage) + kernelPad, kernelPad : len(originalImage[0]) + kernelPad]
+
+
+            differenceImage =  finalImage.real - filteredImage
+
+            #* clipping
+            if self.differenceClippingPushButton.isChecked():
+                self.clipping(differenceImage)
+                self.drawCanvas(differenceImage, self.filteredImageGridLayout)
+
+
+            #* another rescale gm
+            if self.differenceGMPushButton.isChecked():
+                self.gm(differenceImage)
+                self.drawCanvas(differenceImage, self.filteredImageGridLayout)
+
+
+            if self.frequencyPushButton.isChecked():
+                self.drawCanvas(finalImage.real, self.filteredImageGridLayout) 
+
+            if self.spatialPushButton.isChecked():
+                self.drawCanvas(filteredImage, self.filteredImageGridLayout)
+
+
+
+
+
+#?-----------------------------------------------------------------------------------------------------------------------------#
+
                                                 #?######## Helper Functions #########
 
                                                 #?######## Task 1  Helper Functions  #########
@@ -1082,6 +1207,47 @@ class Ui(QtWidgets.QMainWindow):
             return zeroPaddedImage
         except:
             self.ShowPopUpMessage("An ERROR OCCURED!!")
+
+                                                #?######## Task 7 Helper Functions  #########
+
+    #! add zero padding to the image
+    def zeroPadKernel(self, kernel, image):
+        
+        imageHeight = image.shape[0]
+        imageWidth = image.shape[1]
+        kernelHeight = kernel.shape[0]
+        kernelWidth = kernel.shape[1]
+        padWidth = int((imageWidth - kernelWidth) / 2 )
+        padHeight = int((imageHeight - kernelHeight) / 2)
+        paddedKernel = np.zeros((imageHeight, imageWidth)) # setting array of the size of the padded image
+        # starting at the position where the first image pixel is, which is going to be the kernel center
+        # ending at the image dimension + the amount padded
+        for i in range(padHeight, kernelHeight + padHeight):
+            for j in range(padWidth, kernelWidth + padWidth):
+                paddedKernel[i][j] = kernel[i - padHeight][j - padWidth] # inserting image data within the frame of the padding
+        return paddedKernel 
+
+    #! clipping rescale method 
+    def clipping(self, image):
+
+        for i in range(len(image)):
+            for j in range(len(image[0])):
+                if image[i, j] < 0:
+                    image[i, j] = 0
+                elif image[i, j] > 255:
+                    image[i, j] = 255 
+
+    #! gm rescale method
+    def gm(self, image):
+
+        for i in range(len(image)):
+            for j in range(len(image[0])):
+                image[i][j] = image[i][j] - np.min(image) 
+
+        for i in range(len(image)):
+            for j in range(len(image[0])):
+                image[i][j] = ((image[i][j])/np.max(image))*255
+    
 
                                                 #?######## General Helper Functions  #########
 
