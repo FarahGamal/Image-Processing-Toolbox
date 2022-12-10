@@ -1065,6 +1065,9 @@ class Ui(QtWidgets.QMainWindow):
 
                 differenceImage =  finalImage.real - filteredImage
 
+                rescaleFreq = np.copy(finalImage.real)
+                rescaleSpatial = np.copy(filteredImage)
+
                 #* clipping
                 if self.differenceClippingPushButton.isChecked():
                     self.clipping(differenceImage)
@@ -1077,10 +1080,12 @@ class Ui(QtWidgets.QMainWindow):
                     self.drawCanvas(differenceImage, self.filteredImageGridLayout)
 
                 if self.frequencyPushButton.isChecked():
-                    self.drawCanvas(finalImage.real, self.filteredImageGridLayout) 
+                    self.clipping(rescaleFreq)
+                    self.drawCanvas(rescaleFreq, self.filteredImageGridLayout) 
 
                 if self.spatialPushButton.isChecked():
-                    self.drawCanvas(filteredImage, self.filteredImageGridLayout)
+                    self.clipping(rescaleSpatial)
+                    self.drawCanvas(rescaleSpatial, self.filteredImageGridLayout)
 
         except:
             self.ShowPopUpMessage("An ERROR OCCURED!!")
@@ -1294,7 +1299,6 @@ class Ui(QtWidgets.QMainWindow):
             for j in range(len(image[0])):
                 image[i][j] = ((image[i][j])/np.max(image))*255
     
-
                                                 #?######## General Helper Functions  #########
 
     #! Show an Error Message for Handling Invalid files
