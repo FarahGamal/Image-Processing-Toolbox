@@ -1168,7 +1168,7 @@ class Ui(QtWidgets.QMainWindow):
     # segma = 5, mean = 0
     #! add gaussian noise
     def addGaussianNoise(self):
-        try:
+        # try:
             self.clearCanvas(self.histogramGridLayout)
             row, col = self.phantom.shape
             mean = 0
@@ -1176,15 +1176,18 @@ class Ui(QtWidgets.QMainWindow):
             gaussianNoise = np.random.normal(mean, segma, (row, col))
             gaussianNoise = gaussianNoise.reshape(row, col)
             self.noisyImage = self.phantom + gaussianNoise
+            self.clipping(self.noisyImage)
+            print(gaussianNoise)
+            print("**********************")
             self.histogram(self.noisyImage, self.histogramGridLayout)
             self.drawCanvas(self.noisyImage, self.nosyImageGridLayout)
-        except:
-            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+        # except:
+            # self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
 
     # a = -10, b = +10
     #! add uniform noise
     def addUniformNoise(self):
-        try:
+        # try:
             self.clearCanvas(self.histogramGridLayout)
             row, col = self.phantom.shape
             a = -10
@@ -1194,8 +1197,8 @@ class Ui(QtWidgets.QMainWindow):
             self.noisyImage = self.phantom + uniformNoise
             self.histogram(self.noisyImage, self.histogramGridLayout)
             self.drawCanvas(self.noisyImage, self.nosyImageGridLayout)
-        except:
-            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+        # except:
+            # self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
 
     #! mean
     def mean(self, data):
@@ -1225,10 +1228,15 @@ class Ui(QtWidgets.QMainWindow):
 
     #! ROI
     def roi(self):
-        try:
+        # try:
             # read = cv2.imread("noisssse.jpg")
             #select ROI function
             roi = cv2.selectROI("ROI", self.noisyImage)
+            cv2.imshow("image", self.phantom)
+            print(self.noisyImage)
+            print("================================")
+            print(self.phantom)
+            print("=================================")
 
             #print rectangle points of selected roi
             print(roi)
@@ -1242,8 +1250,8 @@ class Ui(QtWidgets.QMainWindow):
             print(histo)
 
             self.drawCanvas(roi_cropped, self.selectRegionGridLayout)
-        except:
-            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+        # except:
+            # self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
     
     #! histogram
     def histogram(self, image, layout):
