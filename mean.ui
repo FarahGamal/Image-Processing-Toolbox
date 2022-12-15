@@ -2102,7 +2102,7 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>602</width>
+                 <width>398</width>
                  <height>220</height>
                 </rect>
                </property>
@@ -2124,7 +2124,7 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>603</width>
+                 <width>399</width>
                  <height>220</height>
                 </rect>
                </property>
@@ -2166,7 +2166,7 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>602</width>
+                 <width>398</width>
                  <height>220</height>
                 </rect>
                </property>
@@ -2208,7 +2208,7 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>603</width>
+                 <width>399</width>
                  <height>220</height>
                 </rect>
                </property>
@@ -2254,6 +2254,90 @@
               </property>
               <property name="text">
                <string>Noisy Image</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QScrollArea" name="scrollArea_27">
+              <property name="widgetResizable">
+               <bool>true</bool>
+              </property>
+              <widget class="QWidget" name="scrollAreaWidgetContents_30">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>399</width>
+                 <height>220</height>
+                </rect>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_51">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="gridLayout_42"/>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QLabel" name="label_34">
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="text">
+               <string>σ</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QScrollArea" name="scrollArea_26">
+              <property name="widgetResizable">
+               <bool>true</bool>
+              </property>
+              <widget class="QWidget" name="scrollAreaWidgetContents_29">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>399</width>
+                 <height>220</height>
+                </rect>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_50">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="gridLayout_33"/>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLabel" name="label_33">
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="text">
+               <string>Mean</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>

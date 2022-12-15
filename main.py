@@ -4,7 +4,7 @@
 import numpy as np
 from PIL import Image
 import pydicom as dicom
-import sys, pathlib, math
+import sys, pathlib, math, cv2
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 import matplotlib.pyplot as plt
@@ -24,6 +24,7 @@ class Ui(QtWidgets.QMainWindow):
         #!?######### Links of GUI Elements to Methods ##########
 
         self.pushButton.clicked.connect(self.browse)
+        self.ROIpushButton.clicked.connect(self.roi)
         self.zoomPushButton.clicked.connect(self.zoom)
         self.shearPushButton.clicked.connect(self.shear)
         self.browseButton.clicked.connect(self.openImage)
@@ -31,20 +32,21 @@ class Ui(QtWidgets.QMainWindow):
         self.rescalePushButton.clicked.connect(self.filter)
         self.clippingPushButton.clicked.connect(self.filter)
         self.nearestPushButton.clicked.connect(self.rotation)
-        self.FTpushButton.clicked.connect(self.removePattern)
         self.bilinearPushButton.clicked.connect(self.rotation)
         self.equalizePushButton.clicked.connect(self.equalize)
-        self.maskPushButton.clicked.connect(self.removePattern)
         self.shearNegativePushButton.clicked.connect(self.shear)
         self.denoisePushButton.clicked.connect(self.medianFilter)
         self.fourierPushButton.clicked.connect(self.browseFourier)
         self.filteringPushButton.clicked.connect(self.browseFilter)
         self.browsePushButton.clicked.connect(self.openImageZoomTab)
+        self.browseNoisePushButton.clicked.connect(self.createPhantom)
         self.removePatternPushButton.clicked.connect(self.removePattern)
         self.spatialPushButton.clicked.connect(self.filterFourierDomain)
+        self.uniformNoisePushButton.clicked.connect(self.addUniformNoise)
         self.browseFDPushButton.clicked.connect(self.browseFourierFilter)
         self.frequencyPushButton.clicked.connect(self.filterFourierDomain)
         self.addNoisePushButton.clicked.connect(self.addSaltAndPepperNoise)
+        self.gaussianNoisePushButton.clicked.connect(self.addGaussianNoise)
         self.generateTLetterPushButton.clicked.connect(self.generateTLetter)
         self.differenceGMPushButton.clicked.connect(self.filterFourierDomain)
         self.differenceClippingPushButton.clicked.connect(self.filterFourierDomain)
@@ -904,7 +906,7 @@ class Ui(QtWidgets.QMainWindow):
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
-                                                #?######## Task 6 Functions  #########
+                                                #?######## Task 6 Part I Functions  #########
 
     #! Browes
     def browseFourier(self):
@@ -972,7 +974,7 @@ class Ui(QtWidgets.QMainWindow):
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
-                                                #?######## Task 7 Functions  #########
+                                                #?######## Task 6 Part II Functions  #########
 
     #! Browes
     def browseFourierFilter(self):
@@ -1071,7 +1073,6 @@ class Ui(QtWidgets.QMainWindow):
                 #* clipping
                 if self.differenceClippingPushButton.isChecked():
                     self.clipping(differenceImage)
-                    print(differenceImage)
                     self.drawCanvas(differenceImage, self.filteredImageGridLayout)
 
                 #* another rescale gm
@@ -1097,29 +1098,23 @@ class Ui(QtWidgets.QMainWindow):
 
             image = Image.open("patterned image.jpeg").convert("L")
             imageArray = np.asarray(image)
-
             imageHeight = imageArray.shape[0]
             imageWidth = imageArray.shape[1]
             filterArray = np.full((imageHeight, imageWidth), 1)
-
-            filterArray[475:495,375:395] = 0
-            filterArray[555:575,375:395] = 0
-            filterArray[475:495,325: 340] = 0
-            filterArray[555:575,325: 340] = 0
-
-            filterArray[435:455,375:395] = 0
-            filterArray[435:455,325: 335] = 0
-            filterArray[605:625,325: 340] = 0
-            filterArray[605:625,380:395] = 0
-
+            filterArray[434:455,324:334] = 0
+            filterArray[433:453,374:395] = 0
+            filterArray[474:494,323:339] = 0
+            filterArray[474:494,375:395] = 0
+            filterArray[554:574,324:339] = 0
+            filterArray[553:574,374:395] = 0
+            filterArray[604:624,324:339] = 0
+            filterArray[604:624,380:395] = 0
             ftImage = np.fft.fft2(imageArray)
             fshift = np.fft.fftshift(ftImage)
             real =  fshift.real
             imaginary =  fshift.imag
-
             magnitude = np.sqrt((real ** 2) + (imaginary ** 2))
             logMagnitude = np.log(magnitude + 1)
-
             filtered = fshift * filterArray
             restoredImage = ((np.fft.ifft2(np.fft.ifftshift(filtered))))
             real = restoredImage.real
@@ -1127,18 +1122,144 @@ class Ui(QtWidgets.QMainWindow):
             restoredImageMagnitude = np.sqrt((real ** 2) + (imaginary ** 2))
             applyMask = logMagnitude * filterArray
             self.drawCanvas(imageArray, self.imagegridLayout)
-
             if self.removePatternPushButton.isChecked():
                 self.drawCanvas(restoredImageMagnitude, self.filteredImageGridLayout)
-
-            if self.FTpushButton.isChecked():
-                self.drawCanvas(logMagnitude, self.filteredImageGridLayout)
-
-            if self.maskPushButton.isChecked():
-                self.drawCanvas(applyMask, self.filteredImageGridLayout)
-        
         except:
             self.ShowPopUpMessage("An ERROR OCCURED!!")
+
+#?-----------------------------------------------------------------------------------------------------------------------------#
+
+                                                #?######## Task 7 Functions  #########
+
+    #! create phantom
+    def createPhantom(self):
+
+        try:
+            self.clearCanvas(self.histogramGridLayout)
+            self.clearCanvas(self.phamtonImageGridLayout)
+            # 50, 120, 200
+            x = np.linspace(-10, 10, 256)
+            y = np.linspace(-10, 10, 256)
+            x, y = np.meshgrid(x, y)
+            x_0 = 0
+            y_0 = 0
+            mask = np.sqrt((x-x_0)**2+(y-y_0)**2)
+
+            r = 5
+            for x in range(256):
+                for y in range(256):
+                    if mask[x,y] < r:
+                        mask[x,y] = 80
+                    elif mask[x,y] >= r:
+                        mask[x,y] = 0
+
+
+            squares = np.full((256, 256), 50)
+            for i in range(35, 221):
+                for j in range(35, 221):
+                    squares[i,j] = 120
+
+            self.phantom = squares + mask 
+            self.histogram(self.phantom, self.histogramGridLayout)
+            self.drawCanvas(self.phantom, self.phamtonImageGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+
+    # segma = 5, mean = 0
+    #! add gaussian noise
+    def addGaussianNoise(self):
+        try:
+            self.clearCanvas(self.histogramGridLayout)
+            row, col = self.phantom.shape
+            mean = 0
+            segma = 5
+            gaussianNoise = np.random.normal(mean, segma, (row, col))
+            gaussianNoise = gaussianNoise.reshape(row, col)
+            self.noisyImage = self.phantom + gaussianNoise
+            self.histogram(self.noisyImage, self.histogramGridLayout)
+            self.drawCanvas(self.noisyImage, self.nosyImageGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+
+    # a = -10, b = +10
+    #! add uniform noise
+    def addUniformNoise(self):
+        try:
+            self.clearCanvas(self.histogramGridLayout)
+            row, col = self.phantom.shape
+            a = -10
+            b = 10
+            uniformNoise = np.random.uniform(a, b, (row, col))
+            uniformNoise = uniformNoise.reshape(row, col)
+            self.noisyImage = self.phantom + uniformNoise
+            self.histogram(self.noisyImage, self.histogramGridLayout)
+            self.drawCanvas(self.noisyImage, self.nosyImageGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+
+    #! mean
+    def mean(self, data):
+        try:
+            n = len(data)
+            mean = 0
+            for i in range(len(data)):
+                mean = i * (data[i]/n) + mean
+            self.meanLabel.setText(str(f'{mean:.3f}'))
+            return mean
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+
+    #! Standard deviation
+    def standardDeviation(self, mean, data):
+        try:
+            # first calculate Variance
+            n = len(data)
+            variance = 0
+            for i in range(len(data)):
+                variance = ((i - mean) ** 2) * (data[i]/n) + variance
+            
+            standardDev = np.sqrt(variance)
+            self.segmaLabel.setText(str(f'{standardDev:.3f}'))
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+
+    #! ROI
+    def roi(self):
+        try:
+            # read = cv2.imread("noisssse.jpg")
+            #select ROI function
+            roi = cv2.selectROI("ROI", self.noisyImage)
+
+            #print rectangle points of selected roi
+            print(roi)
+
+            #Crop selected roi from raw image
+            roi_cropped = self.noisyImage[int(roi[1]):int(roi[1]+roi[3]), int(roi[0]):int(roi[0]+roi[2])]
+            
+            histo = self.histogram(roi_cropped, self.histogramGridLayout)
+            mean = self.mean(histo)
+            self.standardDeviation(mean, histo)
+            print(histo)
+
+            self.drawCanvas(roi_cropped, self.selectRegionGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+    
+    #! histogram
+    def histogram(self, image, layout):
+        try:
+            histo = np.zeros(256)
+            #* Loop on 2d array of the image to calculate frequancey of pixel values
+            for i in range(image.shape[0]):
+                for j in range(image.shape[1]):
+                    histo[int(image[i, j])] += 1
+            #* Make the array normalized by dividing by size        
+            histo /= (image.shape[0] * image.shape[1])
+            #* Call histogram function to draw it
+            self.drawHistogram(layout, np.arange(len(histo)), histo)
+            return histo
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
@@ -1270,12 +1391,10 @@ class Ui(QtWidgets.QMainWindow):
         kernelWidth = kernel.shape[1]
         padWidth = int((imageWidth - kernelWidth) / 2 )
         padHeight = int((imageHeight - kernelHeight) / 2)
-        paddedKernel = np.zeros((imageHeight, imageWidth)) # setting array of the size of the padded image
-        # starting at the position where the first image pixel is, which is going to be the kernel center
-        # ending at the image dimension + the amount padded
+        paddedKernel = np.zeros((imageHeight, imageWidth)) 
         for i in range(padHeight, kernelHeight + padHeight):
             for j in range(padWidth, kernelWidth + padWidth):
-                paddedKernel[i][j] = kernel[i - padHeight][j - padWidth] # inserting image data within the frame of the padding
+                paddedKernel[i][j] = kernel[i - padHeight][j - padWidth] 
         return paddedKernel 
 
     #! clipping rescale method 
