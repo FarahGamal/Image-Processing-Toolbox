@@ -1137,6 +1137,8 @@ class Ui(QtWidgets.QMainWindow):
         try:
             self.clearCanvas(self.histogramGridLayout)
             self.clearCanvas(self.phamtonImageGridLayout)
+            self.clearCanvas(self.nosyImageGridLayout)
+            self.clearCanvas(self.selectRegionGridLayout)
             # 50, 120, 200
             x = np.linspace(-10, 10, 256)
             y = np.linspace(-10, 10, 256)
@@ -1168,7 +1170,7 @@ class Ui(QtWidgets.QMainWindow):
     # segma = 5, mean = 0
     #! add gaussian noise
     def addGaussianNoise(self):
-        # try:
+        try:
             self.clearCanvas(self.histogramGridLayout)
             row, col = self.phantom.shape
             mean = 0
@@ -1177,17 +1179,17 @@ class Ui(QtWidgets.QMainWindow):
             gaussianNoise = gaussianNoise.reshape(row, col)
             self.noisyImage = self.phantom + gaussianNoise
             self.clipping(self.noisyImage)
-            print(gaussianNoise)
-            print("**********************")
+            image = Image.fromarray(np.uint8(self.noisyImage))
+            image.save("noisyImage.jpg")
             self.histogram(self.noisyImage, self.histogramGridLayout)
             self.drawCanvas(self.noisyImage, self.nosyImageGridLayout)
-        # except:
-            # self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
 
     # a = -10, b = +10
     #! add uniform noise
     def addUniformNoise(self):
-        # try:
+        try:
             self.clearCanvas(self.histogramGridLayout)
             row, col = self.phantom.shape
             a = -10
@@ -1195,10 +1197,13 @@ class Ui(QtWidgets.QMainWindow):
             uniformNoise = np.random.uniform(a, b, (row, col))
             uniformNoise = uniformNoise.reshape(row, col)
             self.noisyImage = self.phantom + uniformNoise
+            self.clipping(self.noisyImage)
+            image = Image.fromarray(np.uint8(self.noisyImage))
+            image.save("noisyImage.jpg")
             self.histogram(self.noisyImage, self.histogramGridLayout)
             self.drawCanvas(self.noisyImage, self.nosyImageGridLayout)
-        # except:
-            # self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
 
     #! mean
     def mean(self, data):
@@ -1228,30 +1233,20 @@ class Ui(QtWidgets.QMainWindow):
 
     #! ROI
     def roi(self):
-        # try:
-            # read = cv2.imread("noisssse.jpg")
+        try:
+            noisyImage = cv2.imread("noisyImage.jpg")
             #select ROI function
-            roi = cv2.selectROI("ROI", self.noisyImage)
-            cv2.imshow("image", self.phantom)
-            print(self.noisyImage)
-            print("================================")
-            print(self.phantom)
-            print("=================================")
-
-            #print rectangle points of selected roi
-            print(roi)
-
+            roi = cv2.selectROI("ROI", noisyImage)
             #Crop selected roi from raw image
             roi_cropped = self.noisyImage[int(roi[1]):int(roi[1]+roi[3]), int(roi[0]):int(roi[0]+roi[2])]
             
             histo = self.histogram(roi_cropped, self.histogramGridLayout)
             mean = self.mean(histo)
             self.standardDeviation(mean, histo)
-            print(histo)
 
             self.drawCanvas(roi_cropped, self.selectRegionGridLayout)
-        # except:
-            # self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
     
     #! histogram
     def histogram(self, image, layout):
