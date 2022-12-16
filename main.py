@@ -1179,8 +1179,6 @@ class Ui(QtWidgets.QMainWindow):
             gaussianNoise = gaussianNoise.reshape(row, col)
             self.noisyImage = self.phantom + gaussianNoise
             self.clipping(self.noisyImage)
-            image = Image.fromarray(np.uint8(self.noisyImage))
-            image.save("noisyImage.jpg")
             self.histogram(self.noisyImage, self.histogramGridLayout)
             self.drawCanvas(self.noisyImage, self.nosyImageGridLayout)
         except:
@@ -1198,8 +1196,6 @@ class Ui(QtWidgets.QMainWindow):
             uniformNoise = uniformNoise.reshape(row, col)
             self.noisyImage = self.phantom + uniformNoise
             self.clipping(self.noisyImage)
-            image = Image.fromarray(np.uint8(self.noisyImage))
-            image.save("noisyImage.jpg")
             self.histogram(self.noisyImage, self.histogramGridLayout)
             self.drawCanvas(self.noisyImage, self.nosyImageGridLayout)
         except:
@@ -1234,9 +1230,10 @@ class Ui(QtWidgets.QMainWindow):
     #! ROI
     def roi(self):
         try:
-            noisyImage = cv2.imread("noisyImage.jpg")
+
+            noisyImage = self.noisyImage.astype(np.uint8)
             #select ROI function
-            roi = cv2.selectROI("ROI", noisyImage)
+            roi = cv2.selectROI("ROI", noisyImage, False, False)
             #Crop selected roi from raw image
             roi_cropped = self.noisyImage[int(roi[1]):int(roi[1]+roi[3]), int(roi[0]):int(roi[0]+roi[2])]
             
