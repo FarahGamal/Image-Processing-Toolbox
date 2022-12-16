@@ -1139,7 +1139,7 @@ class Ui(QtWidgets.QMainWindow):
             self.clearCanvas(self.phamtonImageGridLayout)
             self.clearCanvas(self.nosyImageGridLayout)
             self.clearCanvas(self.selectRegionGridLayout)
-            # 50, 120, 200
+
             x = np.linspace(-10, 10, 256)
             y = np.linspace(-10, 10, 256)
             x, y = np.meshgrid(x, y)
@@ -1162,7 +1162,7 @@ class Ui(QtWidgets.QMainWindow):
                     squares[i,j] = 120
 
             self.phantom = squares + mask 
-            self.histogram(self.phantom, self.histogramGridLayout)
+            histo, freq = self.histogram(self.phantom, self.histogramGridLayout)
             self.drawCanvas(self.phantom, self.phamtonImageGridLayout)
         except:
             self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
@@ -1179,7 +1179,7 @@ class Ui(QtWidgets.QMainWindow):
             gaussianNoise = gaussianNoise.reshape(row, col)
             self.noisyImage = self.phantom + gaussianNoise
             self.clipping(self.noisyImage)
-            self.histogram(self.noisyImage, self.histogramGridLayout)
+            histo, freq = self.histogram(self.noisyImage, self.histogramGridLayout)
             self.drawCanvas(self.noisyImage, self.nosyImageGridLayout)
         except:
             self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
@@ -1196,7 +1196,7 @@ class Ui(QtWidgets.QMainWindow):
             uniformNoise = uniformNoise.reshape(row, col)
             self.noisyImage = self.phantom + uniformNoise
             self.clipping(self.noisyImage)
-            self.histogram(self.noisyImage, self.histogramGridLayout)
+            histo, freq = self.histogram(self.noisyImage, self.histogramGridLayout)
             self.drawCanvas(self.noisyImage, self.nosyImageGridLayout)
         except:
             self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
@@ -1204,10 +1204,11 @@ class Ui(QtWidgets.QMainWindow):
     #! mean
     def mean(self, data):
         try:
-            n = len(data)
+            x, y = self.roi_cropped.shape
+            n = x * y
             mean = 0
-            for i in range(len(data)):
-                mean = i * (data[i]/n) + mean
+            for i in range(len(data)-1):
+                mean += (i * (data[i]/n)) 
             self.meanLabel.setText(str(f'{mean:.3f}'))
             return mean
         except:
@@ -1217,10 +1218,11 @@ class Ui(QtWidgets.QMainWindow):
     def standardDeviation(self, mean, data):
         try:
             # first calculate Variance
-            n = len(data)
+            x, y = self.roi_cropped.shape
+            n = x * y
             variance = 0
-            for i in range(len(data)):
-                variance = ((i - mean) ** 2) * (data[i]/n) + variance
+            for i in range(len(data)-1):
+                variance += (((i - mean) ** 2) * (data[i]/n))
             
             standardDev = np.sqrt(variance)
             self.segmaLabel.setText(str(f'{standardDev:.3f}'))
@@ -1235,29 +1237,37 @@ class Ui(QtWidgets.QMainWindow):
             #select ROI function
             roi = cv2.selectROI("ROI", noisyImage, False, False)
             #Crop selected roi from raw image
-            roi_cropped = self.noisyImage[int(roi[1]):int(roi[1]+roi[3]), int(roi[0]):int(roi[0]+roi[2])]
+            self.roi_cropped = self.noisyImage[int(roi[1]):int(roi[1]+roi[3]), int(roi[0]):int(roi[0]+roi[2])]
+            print(self.roi_cropped.shape)
+            arr = self.roi_cropped.flatten()
+            histo, freq = self.histogram(self.roi_cropped, self.histogramGridLayout)
+            mean = self.mean(freq)
+            self.standardDeviation(mean, freq)
             
-            histo = self.histogram(roi_cropped, self.histogramGridLayout)
-            mean = self.mean(histo)
-            self.standardDeviation(mean, histo)
+            sum = 0
+            for i in range(len(arr)):
+                sum = arr[i] + sum
+            m = sum/(len(arr))
+            print(m)
 
-            self.drawCanvas(roi_cropped, self.selectRegionGridLayout)
+            self.drawCanvas(self.roi_cropped, self.selectRegionGridLayout)
         except:
             self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
     
     #! histogram
     def histogram(self, image, layout):
         try:
-            histo = np.zeros(256)
+            freq = np.zeros(256)
             #* Loop on 2d array of the image to calculate frequancey of pixel values
             for i in range(image.shape[0]):
                 for j in range(image.shape[1]):
-                    histo[int(image[i, j])] += 1
+                    freq[int(image[i, j])] += 1
+            
             #* Make the array normalized by dividing by size        
-            histo /= (image.shape[0] * image.shape[1])
+            histo = freq/(image.shape[0] * image.shape[1])
             #* Call histogram function to draw it
             self.drawHistogram(layout, np.arange(len(histo)), histo)
-            return histo
+            return histo, freq
         except:
             self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
 
