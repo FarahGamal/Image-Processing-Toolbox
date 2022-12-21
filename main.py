@@ -10,6 +10,8 @@ from PyQt5.QtWidgets import *
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from PyQt5 import  QtWidgets,uic
+from skimage.data import shepp_logan_phantom
+from skimage.transform import radon, rescale, iradon
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 #?-----------------------------------------------------------------------------------------------------------------------------# 
@@ -50,6 +52,13 @@ class Ui(QtWidgets.QMainWindow):
         self.generateTLetterPushButton.clicked.connect(self.generateTLetter)
         self.differenceGMPushButton.clicked.connect(self.filterFourierDomain)
         self.differenceClippingPushButton.clicked.connect(self.filterFourierDomain)
+
+        self.scheppLoganPhantompushButton.clicked.connect(self.drawScheppLoganPhantom)
+        self.sinogramPushButton.clicked.connect(self.sinogram)
+        self.noFilterPushButton.clicked.connect(self.laminogram)
+        self.noFilterSingleStepPushButton.clicked.connect(self.laminogramNoFilter)
+        # self.ramLakPushButton.clicked.connect(self.laminogramRamLak)
+        self.hammingPushButton.clicked.connect(self.laminogramHamming)
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
@@ -906,7 +915,7 @@ class Ui(QtWidgets.QMainWindow):
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
-                                                #?######## Task 6 Part I Functions  #########
+                                                #?######## Task 6 Functions  #########
 
     #! Browes
     def browseFourier(self):
@@ -974,7 +983,7 @@ class Ui(QtWidgets.QMainWindow):
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
-                                                #?######## Task 6 Part II Functions  #########
+                                                #?######## Task 7 Functions  #########
 
     #! Browes
     def browseFourierFilter(self):
@@ -1129,7 +1138,7 @@ class Ui(QtWidgets.QMainWindow):
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
-                                                #?######## Task 7 Functions  #########
+                                                #?######## Task 8 Functions  #########
 
     #! create phantom
     def createPhantom(self):
@@ -1270,6 +1279,60 @@ class Ui(QtWidgets.QMainWindow):
             return histo, freq
         except:
             self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+
+#?-----------------------------------------------------------------------------------------------------------------------------#
+
+                                                #?######## Task 9 Functions  #########
+
+    #! schepp Logan Phantom
+    def drawScheppLoganPhantom(self):
+
+        # try:
+            self.scheppLoganImage = shepp_logan_phantom()
+            self.scheppLoganImage = rescale(self.scheppLoganImage, scale=0.64, mode='reflect', channel_axis=None)
+            self.drawCanvas(self.scheppLoganImage, self.scheppLoganPhantomGridLayout)
+            # print(len(image))
+            # print(len(image[0]))
+        # except:
+            # self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+
+    #! Sinogram of this phantom
+    def sinogram(self):
+        theta = np.arange(0, 180, 1)
+        sinogram = radon(self.scheppLoganImage, theta=theta)
+        dx, dy = 0.5 * 180.0 / max(self.scheppLoganImage.shape), 0.5 / sinogram.shape[0]
+        self.drawCanvas(sinogram, self.laminogramGridLayout)
+    
+    #! Laminogram with angles = [0, 20, 40, 60,...., 160]
+    def laminogram(self):
+        theta = np.arange(0, 161, 20)
+        sinogram = radon(self.scheppLoganImage, theta=theta)
+        reconstruction_fbp = iradon(sinogram, theta=theta, filter_name= None)
+        self.drawCanvas(reconstruction_fbp, self.laminogramGridLayout)
+        
+    #! Laminogram with angles = [0, 1, 2, 3,..., 179]
+    def laminogramNoFilter(self):
+        theta = np.arange(0, 180, 1)
+        sinogram = radon(self.scheppLoganImage, theta=theta)
+        reconstruction_fbp = iradon(sinogram, theta=theta, filter_name= None)
+        self.drawCanvas(reconstruction_fbp, self.laminogramGridLayout)
+    
+    #! Laminogram with angles = [0, 1, 2, 3,..., 179] + Ram-Lak filter
+    def laminogramRamLak(self):
+        theta = np.arange(0, 180, 1)
+        sinogram = radon(self.scheppLoganImage, theta=theta)
+        reconstruction_fbp = iradon(sinogram, theta=theta, filter_name= "Ram-Lak")
+        self.drawCanvas(reconstruction_fbp, self.laminogramGridLayout)
+        
+    #! Laminogram with angles = [0, 1, 2, 3,..., 179] + Hamming filter
+    def laminogramHamming(self):
+        theta = np.arange(0, 180, 1)
+        sinogram = radon(self.scheppLoganImage, theta=theta)
+        reconstruction_fbp = iradon(sinogram, theta=theta, filter_name= "hamming")
+        self.drawCanvas(reconstruction_fbp, self.laminogramGridLayout)
+
+    # scheppLoganPhantomGridLayout
+    # laminogramGridLayout
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
