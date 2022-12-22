@@ -36,11 +36,15 @@ class Ui(QtWidgets.QMainWindow):
         self.nearestPushButton.clicked.connect(self.rotation)
         self.bilinearPushButton.clicked.connect(self.rotation)
         self.equalizePushButton.clicked.connect(self.equalize)
+        self.sinogramPushButton.clicked.connect(self.sinogram)
+        self.noFilterPushButton.clicked.connect(self.laminogram)
         self.shearNegativePushButton.clicked.connect(self.shear)
         self.denoisePushButton.clicked.connect(self.medianFilter)
         self.fourierPushButton.clicked.connect(self.browseFourier)
         self.filteringPushButton.clicked.connect(self.browseFilter)
         self.browsePushButton.clicked.connect(self.openImageZoomTab)
+        self.ramLakPushButton.clicked.connect(self.laminogramRamLak)
+        self.hammingPushButton.clicked.connect(self.laminogramHamming)
         self.browseNoisePushButton.clicked.connect(self.createPhantom)
         self.removePatternPushButton.clicked.connect(self.removePattern)
         self.spatialPushButton.clicked.connect(self.filterFourierDomain)
@@ -51,14 +55,9 @@ class Ui(QtWidgets.QMainWindow):
         self.gaussianNoisePushButton.clicked.connect(self.addGaussianNoise)
         self.generateTLetterPushButton.clicked.connect(self.generateTLetter)
         self.differenceGMPushButton.clicked.connect(self.filterFourierDomain)
-        self.differenceClippingPushButton.clicked.connect(self.filterFourierDomain)
-
-        self.scheppLoganPhantompushButton.clicked.connect(self.drawScheppLoganPhantom)
-        self.sinogramPushButton.clicked.connect(self.sinogram)
-        self.noFilterPushButton.clicked.connect(self.laminogram)
         self.noFilterSingleStepPushButton.clicked.connect(self.laminogramNoFilter)
-        # self.ramLakPushButton.clicked.connect(self.laminogramRamLak)
-        self.hammingPushButton.clicked.connect(self.laminogramHamming)
+        self.differenceClippingPushButton.clicked.connect(self.filterFourierDomain)
+        self.scheppLoganPhantompushButton.clicked.connect(self.drawScheppLoganPhantom)
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
@@ -1154,6 +1153,7 @@ class Ui(QtWidgets.QMainWindow):
             x, y = np.meshgrid(x, y)
             x_0 = 0
             y_0 = 0
+            # distance between pixel and center 
             mask = np.sqrt((x-x_0)**2+(y-y_0)**2)
 
             r = 5
@@ -1196,6 +1196,7 @@ class Ui(QtWidgets.QMainWindow):
     # a = -10, b = +10
     #! add uniform noise
     def addUniformNoise(self):
+        
         try:
             self.clearCanvas(self.histogramGridLayout)
             row, col = self.phantom.shape
@@ -1247,7 +1248,6 @@ class Ui(QtWidgets.QMainWindow):
             roi = cv2.selectROI("ROI", noisyImage, False, False)
             #Crop selected roi from raw image
             self.roi_cropped = self.noisyImage[int(roi[1]):int(roi[1]+roi[3]), int(roi[0]):int(roi[0]+roi[2])]
-            print(self.roi_cropped.shape)
             arr = self.roi_cropped.flatten()
             histo, freq = self.histogram(self.roi_cropped, self.histogramGridLayout)
             mean = self.mean(freq)
@@ -1257,7 +1257,6 @@ class Ui(QtWidgets.QMainWindow):
             for i in range(len(arr)):
                 sum = arr[i] + sum
             m = sum/(len(arr))
-            print(m)
 
             self.drawCanvas(self.roi_cropped, self.selectRegionGridLayout)
         except:
@@ -1286,53 +1285,66 @@ class Ui(QtWidgets.QMainWindow):
 
     #! schepp Logan Phantom
     def drawScheppLoganPhantom(self):
-
-        # try:
+        try:
             self.scheppLoganImage = shepp_logan_phantom()
             self.scheppLoganImage = rescale(self.scheppLoganImage, scale=0.64, mode='reflect', channel_axis=None)
             self.drawCanvas(self.scheppLoganImage, self.scheppLoganPhantomGridLayout)
-            # print(len(image))
-            # print(len(image[0]))
-        # except:
-            # self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
 
     #! Sinogram of this phantom
     def sinogram(self):
-        theta = np.arange(0, 180, 1)
-        sinogram = radon(self.scheppLoganImage, theta=theta)
-        dx, dy = 0.5 * 180.0 / max(self.scheppLoganImage.shape), 0.5 / sinogram.shape[0]
-        self.drawCanvas(sinogram, self.laminogramGridLayout)
+        try:
+            self.titelLabel.setText("Radon transform\n(Sinogram)")
+            theta = np.arange(0, 180, 1)
+            sinogram = radon(self.scheppLoganImage, theta=theta)
+            self.drawCanvasWithTitel(sinogram, self.laminogramGridLayout, "Projection angle (deg)", "Projection position (pixels)")
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
     
     #! Laminogram with angles = [0, 20, 40, 60,...., 160]
     def laminogram(self):
-        theta = np.arange(0, 161, 20)
-        sinogram = radon(self.scheppLoganImage, theta=theta)
-        reconstruction_fbp = iradon(sinogram, theta=theta, filter_name= None)
-        self.drawCanvas(reconstruction_fbp, self.laminogramGridLayout)
+        try:
+            self.titelLabel.setText("No Filtter\n(angles = [0, 20, 40, 60,...., 160])")
+            theta = np.arange(0, 161, 20)
+            sinogram = radon(self.scheppLoganImage, theta=theta)
+            reconstruction_fbp = iradon(sinogram, theta=theta, filter_name= None)
+            self.drawCanvas(reconstruction_fbp, self.laminogramGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
         
     #! Laminogram with angles = [0, 1, 2, 3,..., 179]
     def laminogramNoFilter(self):
-        theta = np.arange(0, 180, 1)
-        sinogram = radon(self.scheppLoganImage, theta=theta)
-        reconstruction_fbp = iradon(sinogram, theta=theta, filter_name= None)
-        self.drawCanvas(reconstruction_fbp, self.laminogramGridLayout)
+        try:
+            self.titelLabel.setText("No Filtter\n(angles = [0, 1, 2, 3,..., 179])")
+            theta = np.arange(0, 180, 1)
+            sinogram = radon(self.scheppLoganImage, theta=theta)
+            reconstruction_fbp = iradon(sinogram, theta=theta, filter_name= None)
+            self.drawCanvas(reconstruction_fbp, self.laminogramGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
     
     #! Laminogram with angles = [0, 1, 2, 3,..., 179] + Ram-Lak filter
     def laminogramRamLak(self):
-        theta = np.arange(0, 180, 1)
-        sinogram = radon(self.scheppLoganImage, theta=theta)
-        reconstruction_fbp = iradon(sinogram, theta=theta, filter_name= "Ram-Lak")
-        self.drawCanvas(reconstruction_fbp, self.laminogramGridLayout)
+        try:
+            self.titelLabel.setText("Filtered back projection\n(Ram-Lak Filter)")
+            theta = np.arange(0, 180, 1)
+            sinogram = radon(self.scheppLoganImage, theta=theta)
+            reconstruction_fbp = iradon(sinogram, theta=theta, filter_name= "ramp")
+            self.drawCanvas(reconstruction_fbp, self.laminogramGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
         
     #! Laminogram with angles = [0, 1, 2, 3,..., 179] + Hamming filter
     def laminogramHamming(self):
-        theta = np.arange(0, 180, 1)
-        sinogram = radon(self.scheppLoganImage, theta=theta)
-        reconstruction_fbp = iradon(sinogram, theta=theta, filter_name= "hamming")
-        self.drawCanvas(reconstruction_fbp, self.laminogramGridLayout)
-
-    # scheppLoganPhantomGridLayout
-    # laminogramGridLayout
+        try:
+            self.titelLabel.setText("Filtered back projection\n(Hamming Filter)")
+            theta = np.arange(0, 180, 1)
+            sinogram = radon(self.scheppLoganImage, theta=theta)
+            reconstruction_fbp = iradon(sinogram, theta=theta, filter_name= "hamming")
+            self.drawCanvas(reconstruction_fbp, self.laminogramGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
@@ -1509,9 +1521,20 @@ class Ui(QtWidgets.QMainWindow):
         self.figure = plt.figure(figsize=(15,5))
         self.Canvas = FigureCanvas(self.figure)
         layout.addWidget(self.Canvas,0, 0, 1, 1)
-
+        
         plt.imshow(image, cmap='gray')
         self.Canvas.draw() 
+
+    def drawCanvasWithTitel(self, image, layout, xlabel, ylabel):
+        self.figure = plt.figure(figsize=(15,5))
+        self.Canvas = FigureCanvas(self.figure)
+        layout.addWidget(self.Canvas,0, 0, 1, 1)
+
+        plt.ylabel(ylabel)
+        plt.xlabel(xlabel)
+        
+        plt.imshow(image, cmap='gray')
+        self.Canvas.draw()
 
     #! Clear Canvas
     def clearCanvas(self, layout):
