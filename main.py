@@ -59,6 +59,14 @@ class Ui(QtWidgets.QMainWindow):
         self.differenceClippingPushButton.clicked.connect(self.filterFourierDomain)
         self.scheppLoganPhantompushButton.clicked.connect(self.drawScheppLoganPhantom)
 
+        self.imagePushButton.clicked.connect(self.showImage)
+        
+        self.erosionPushButton.clicked.connect(self.erosion)
+        self.dilationPushButton.clicked.connect(self.dilation)
+        self.openingPushButton.clicked.connect(self.opening)
+        self.closingPushButton.clicked.connect(self.closing)
+        self.removeNoisePushButton.clicked.connect(self.remaveNoise)
+
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
                                                 #?######## Main Methods #########
@@ -1345,6 +1353,164 @@ class Ui(QtWidgets.QMainWindow):
             self.drawCanvas(reconstruction_fbp, self.laminogramGridLayout)
         except:
             self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+
+#?-----------------------------------------------------------------------------------------------------------------------------#
+
+                                                #?######## Task 10 Functions  #########
+
+    #! open image and show it
+    def showImage(self):
+        try:
+            self.showImage = Image.open("binary_image.png").convert("1")
+            self.heightImage = self.showImage.size[0]
+            self.widthImage = self.showImage.size[1]
+            self.imageArray = np.asarray(self.showImage)
+            self.drawCanvas(self.showImage, self.binaryImageGridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+
+    #! structure element
+    def structureElementFunction(self):
+        try:
+            self.structureElementSize = int(self.structureElementSizeSbinBox.value())
+            if self.structureElementSize % 2 == 0 or self.structureElementSize == 0:
+                self.ShowPopUpMessage("Error! Plese, Enter any odd Structure Element!")
+                pass
+            else:
+                self.shift = (self.structureElementSize - 1) // 2
+                self.structureElement = np.ones((self.structureElementSize,self.structureElementSize))
+                self.structureElement[0,0] = 0
+                self.structureElement[self.structureElementSize-1,self.structureElementSize-1] = 0
+                self.structureElement[0,self.structureElementSize-1] = 0
+                self.structureElement[self.structureElementSize-1,0] = 0
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+
+    #! erosion
+    def erosion(self):
+        try:
+            self.structureElementFunction()
+            structureElement1d = self.structureElement.flatten()
+            self.erosionImage= np.zeros((self.widthImage,self.heightImage))
+            for i in range(self.shift , self.widthImage - self.shift ):
+                for j in range(self.shift ,self.heightImage - self.shift ):
+                    count = 0
+                    imageValue = self.imageArray[i - self.shift :i + self.shift + 1, j - self.shift :j + self.shift + 1]
+                    imageValue1d = imageValue.flatten()
+                    for k in range(len(structureElement1d)):
+                        if structureElement1d[k] == 1 and imageValue1d[k] == 1:
+                            count += 1
+
+                    if count == ((self.structureElementSize) ** 2) - 4:
+                        self.erosionImage[i,j] = 1 
+
+            self.drawCanvas(self.erosionImage, self.GridLayout)
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!") 
+
+    #! dilation
+    def dilation(self):
+        try:
+            self.structureElementFunction()
+            structureElement1d = self.structureElement.flatten()
+            self.dilationImage= np.zeros((self.widthImage,self.heightImage))
+            for i in range(self.shift , self.widthImage - self.shift ):
+                for j in range(self.shift ,self.heightImage - self.shift ):
+                    imageValue = self.imageArray[i - self.shift :i + self.shift + 1, j - self.shift :j + self.shift + 1]
+                    imageValue1d = imageValue.flatten()
+                    for k in range(len(structureElement1d)):
+                        if structureElement1d[k] == 1 and imageValue1d[k] == 1:
+                            self.dilationImage[i,j] = 1
+            print(np.max(self.dilationImage))
+            print(np.min(self.dilationImage))
+            self.drawCanvas(self.dilationImage, self.GridLayout) 
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+
+    #!opening
+    # erosion then dilation
+    def opening(self):
+        try:
+            self.erosion()
+            input_img = self.erosionImage
+            self.structureElementFunction()
+            structureElement1d = self.structureElement.flatten()
+            opennedImage= np.zeros((self.widthImage,self.heightImage))
+            for i in range(self.shift , self.widthImage - self.shift ):
+                for j in range(self.shift ,self.heightImage - self.shift ):
+                    imageValue = input_img[i - self.shift :i + self.shift + 1, j - self.shift :j + self.shift + 1]
+                    imageValue1d = imageValue.flatten()
+                    for k in range(len(structureElement1d)):
+                        if structureElement1d[k] == 1 and imageValue1d[k] == 1:
+                            opennedImage[i,j] = 1
+            self.drawCanvas(opennedImage, self.GridLayout) 
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+
+    #! closing
+    # dilation then erosion
+    def closing(self):
+        try:
+            self.dilation()
+            input_img = self.dilationImage
+            self.structureElementFunction()
+            structureElement1d = self.structureElement.flatten()
+            closedImage= np.zeros((self.widthImage,self.heightImage))
+            for i in range(self.shift , self.widthImage - self.shift ):
+                for j in range(self.shift ,self.heightImage - self.shift ):
+                    count = 0
+                    imageValue = input_img[i - self.shift :i + self.shift + 1, j - self.shift :j + self.shift + 1]
+                    imageValue1d = imageValue.flatten()
+                    for k in range(len(structureElement1d)):
+                        if structureElement1d[k] == 1 and imageValue1d[k] == 1:
+                            count += 1
+
+                    if count == ((self.structureElementSize) ** 2) - 4:
+                        closedImage[i,j] = 1
+            self.drawCanvas(closedImage, self.GridLayout) 
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+        
+    #! remove noise
+    # opening
+    def remaveNoise(self):
+        try:
+            structureElementSize = 3
+            center = (structureElementSize - 1) // 2
+            structureElement = np.ones((structureElementSize,structureElementSize))
+            structureElement[0,0] = 0
+            structureElement[structureElementSize-1,structureElementSize-1] = 0
+            structureElement[0,structureElementSize-1] = 0
+            structureElement[structureElementSize-1,0] = 0
+            structureElement1d = structureElement.flatten()
+            
+            erosionImage = np.zeros((self.widthImage,self.heightImage))
+            for i in range(center , self.widthImage - center ):
+                for j in range(center ,self.heightImage - center ):
+                    count = 0
+                    imageValue = self.imageArray[i - center :i + center + 1, j - center :j + center + 1]
+                    imageValue1d = imageValue.flatten()
+                    for k in range(len(structureElement1d)):
+                        if structureElement1d[k] == 1 and imageValue1d[k] == 1:
+                            count += 1
+
+                    if count == ((structureElementSize) ** 2) - 4:
+                        erosionImage[i,j] = 1
+
+            filteredImage= np.zeros((self.widthImage,self.heightImage))
+            for i in range(center , self.widthImage - center ):
+                for j in range(center ,self.heightImage - center ):
+                    count = 0
+                    imageValue = erosionImage[i - center :i + center + 1, j - center :j + center + 1]
+                    imageValue1d = imageValue.flatten()
+                    for k in range(len(structureElement1d)):
+                        if structureElement1d[k] == 1 and imageValue1d[k] == 1:
+                            filteredImage[i,j] = 1
+
+            self.drawCanvas(filteredImage, self.GridLayout) 
+        except:
+            self.ShowPopUpMessage("An ERROR HAS OCCURED!!")
+
 
 #?-----------------------------------------------------------------------------------------------------------------------------#
 
