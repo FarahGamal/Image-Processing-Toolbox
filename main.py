@@ -19,7 +19,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui, self).__init__()
-        uic.loadUi('GUI2.ui', self)
+        uic.loadUi('GUI.ui', self)
         self.setWindowTitle("Image Viewer")
         self.show()
 
